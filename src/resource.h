@@ -1,8 +1,8 @@
 #pragma once
 
-#define STACKLY_VERSION_STR     "0.5.3"
-#define STACKLY_VERSION_W       L"0.5.3"
-#define STACKLY_VERSION_NUM     0,5,3,0
+#define STACKLY_VERSION_STR     "0.6.0"
+#define STACKLY_VERSION_W       L"0.6.0"
+#define STACKLY_VERSION_NUM     0,6,0,0
 
 #define IDI_APP                 101
 #define IDR_ACCEL               103
@@ -98,6 +98,9 @@
 #define ID_THEME_SYSTEM         40040
 #define ID_THEME_LIGHT          40041
 #define ID_THEME_DARK           40042
+#define ID_LANG_AUTO            40070
+#define ID_LANG_IT              40071
+#define ID_LANG_EN              40072
 #define ID_KIND_BASE            41000
 #define ID_VQ_BASE              41100
 #define ID_CONT_BASE            41200

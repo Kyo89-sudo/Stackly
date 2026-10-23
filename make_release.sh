@@ -9,6 +9,9 @@ VER=$(sed -n 's/.*STACKLY_VERSION_STR *"\(.*\)".*/\1/p' src/resource.h)
 CXXFLAGS="-std=c++17 -O2 -Wall -Wextra -municode -DUNICODE -D_UNICODE"
 mkdir -p build dist installer/payload
 
+# Tabella delle traduzioni: rigenerata e verificata (errore se manca una traduzione)
+if command -v python3 >/dev/null 2>&1; then python3 tools/i18n.py; fi
+
 ${TC}windres --codepage=65001 -Isrc src/app.rc -O coff -o build/app.res.o
 ${TC}clang++ $CXXFLAGS src/main.cpp build/app.res.o -o build/Stackly.exe -mwindows -static -s \
   -lcomctl32 -lshell32 -lole32 -lwinhttp -lwindowscodecs -luuid -luxtheme -ldwmapi -lgdiplus

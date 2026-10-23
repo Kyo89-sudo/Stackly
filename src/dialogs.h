@@ -338,7 +338,7 @@ static void BuildPickerRows(const JVal& root, PickerCtx& c) {
     std::wstring dur = FormatDuration(root.num("duration"));
     std::wstring site = U(root.str("extractor_key", root.str("extractor")));
     c.info = site;
-    if (!dur.empty()) c.info += (c.info.empty() ? L"" : L"   ·   ") + std::wstring(L"durata ") + dur;
+    if (!dur.empty()) c.info += (c.info.empty() ? L"" : L"   ·   ") + std::wstring(TR(L"durata ")) + dur;
 
     if (const JVal* fmts = root.get("formats"); fmts && fmts->t == JVal::Arr) {
         for (const JVal& f : fmts->items) {
@@ -361,7 +361,7 @@ static void BuildPickerRows(const JVal& root, PickerCtx& c) {
             std::wstring proto = U(f.str("protocol"));
             if (proto.find(L"m3u8") != std::wstring::npos) proto = L"HLS";
             else if (proto.find(L"dash") != std::wstring::npos) proto = L"DASH";
-            else if (proto == L"https" || proto == L"http") proto = L"diretto";
+            else if (proto == L"https" || proto == L"http") proto = TR(L"diretto");
             std::wstring note = U(f.str("format_note"));
             FmtRow r;
             r.id = id;
@@ -375,7 +375,7 @@ static void BuildPickerRows(const JVal& root, PickerCtx& c) {
                 r.cols[4] = JNumStr(f.num("tbr"), L"%.0f kbps");
                 r.cols[5] = sizeS;
                 r.cols[6] = proto;
-                r.cols[7] = note + (muxed ? (note.empty() ? L"" : L", ") + std::wstring(L"con audio") : L"");
+                r.cols[7] = note + (muxed ? (note.empty() ? L"" : L", ") + std::wstring(TR(L"con audio")) : L"");
                 r.height = h;
                 r.rate = f.num("tbr");
                 r.muxed = muxed;
@@ -529,28 +529,28 @@ static void PickerCompute(PickerCtx& c) {
     std::wstring sum;
     if (v) sum = v->cols[1].empty() ? U(v->id) : v->cols[1];
     if (!as.empty()) {
-        std::wstring a = as.size() == 1 ? (L"audio " + (as[0]->cols[1] == L"–" ? as[0]->cols[2] : as[0]->cols[1]))
-                                        : std::to_wstring(as.size()) + L" tracce audio";
+        std::wstring a = as.size() == 1 ? (TR(L"audio ") + (as[0]->cols[1] == L"–" ? as[0]->cols[2] : as[0]->cols[1]))
+                                        : std::to_wstring(as.size()) + TR(L" tracce audio");
         sum += (sum.empty() ? L"" : L" + ") + a;
     } else if (v && !v->muxed) {
-        sum += L" (senza audio)";
+        sum += TR(L" (senza audio)");
     }
     if (!ss.empty()) {
         std::wstring l;
         for (auto* s : ss) l += (l.empty() ? L"" : L",") + U(s->lang);
-        sum += (sum.empty() ? L"Solo sottotitoli " : L" + sub ") + l;
+        sum += (sum.empty() ? TR(L"Solo sottotitoli ") : TR(L" + sub ")) + l;
     }
     if (v) sum += L" · " + std::wstring(cont ? L"MKV" : L"MP4");
-    r.label = sum.empty() ? L"Niente selezionato" : sum;
+    r.label = sum.empty() ? TR(L"Niente selezionato") : sum;
     c.out = r;
 
-    SetWindowTextW(c.summary, (L"Verrà scaricato: " + r.label).c_str());
+    SetWindowTextW(c.summary, (TR(L"Verrà scaricato: ") + r.label).c_str());
     bool any = v || !as.empty() || !ss.empty();
     EnableWindow(c.ok, any);
     EnableWindow(c.embed, v && !ss.empty());
     EnableWindow(c.srt, !ss.empty() && c.hasFfmpeg);
     EnableWindow(c.cont, v != nullptr);
-    SetWindowTextW(c.cont, kContainers[cont].value);
+    SetWindowTextW(c.cont, kContainers[cont].value());
     InvalidateRect(c.ok, nullptr, FALSE);
 }
 
@@ -581,7 +581,7 @@ static void PickerLayout(HWND dlg, PickerCtx& c) {
     mv(c.embed, x, ry, we, rowH); x += we + S(8);
     int wsr = TextWidth(g_fUi, GetText(c.srt)) + S(34);
     mv(c.srt, x, ry, wsr, rowH); x += wsr + S(28);
-    int lc = TextWidth(g_fUi, L"Formato file") + S(10);
+    int lc = TextWidth(g_fUi, TR(L"Formato file")) + S(10);
     mv(c.lblCont, x, ry, lc, rowH); x += lc;
     mv(c.cont, x, ry, S(96), rowH);
     int by = H - m - btnH;
@@ -599,6 +599,7 @@ static INT_PTR CALLBACK PickerProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     case WM_INITDIALOG: {
         c = reinterpret_cast<PickerCtx*>(lp);
         SetWindowLongPtrW(dlg, DWLP_USER, (LONG_PTR)c);
+        SetWindowTextW(dlg, TR(L"Scegli i formati"));
         SendMessageW(dlg, WM_SETICON, ICON_BIG, (LPARAM)g_appIcon);
         auto mk = [&](const wchar_t* cls, const wchar_t* text, DWORD style, int id, DWORD ex = 0) {
             HWND h = CreateWindowExW(ex, cls, text, WS_CHILD | WS_VISIBLE | style, 0, 0, 10, 10, dlg,
@@ -609,9 +610,9 @@ static INT_PTR CALLBACK PickerProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         c->title_ = mk(WC_STATICW, c->title.c_str(), SS_ENDELLIPSIS | SS_NOPREFIX, IDC_PK_TITLE);
         SendMessageW(c->title_, WM_SETFONT, (WPARAM)g_fTitle, FALSE);
         c->info_ = mk(WC_STATICW, c->info.c_str(), SS_ENDELLIPSIS | SS_NOPREFIX, IDC_PK_INFO);
-        c->lblV = mk(WC_STATICW, (L"VIDEO   (" + std::to_wstring(c->vids.size()) + L")").c_str(), 0, IDC_PK_LBLV);
-        c->lblA = mk(WC_STATICW, (L"AUDIO   (" + std::to_wstring(c->auds.size()) + L")   –   puoi spuntarne più di una").c_str(), 0, IDC_PK_LBLA);
-        c->lblS = mk(WC_STATICW, (L"SOTTOTITOLI   (" + std::to_wstring(c->subs.size()) + L")   –   anche da soli, senza video né audio").c_str(), 0, IDC_PK_LBLS);
+        c->lblV = mk(WC_STATICW, (TR(L"VIDEO   (") + std::to_wstring(c->vids.size()) + L")").c_str(), 0, IDC_PK_LBLV);
+        c->lblA = mk(WC_STATICW, (L"AUDIO   (" + std::to_wstring(c->auds.size()) + TR(L")   –   puoi spuntarne più di una")).c_str(), 0, IDC_PK_LBLA);
+        c->lblS = mk(WC_STATICW, (TR(L"SOTTOTITOLI   (") + std::to_wstring(c->subs.size()) + TR(L")   –   anche da soli, senza video né audio")).c_str(), 0, IDC_PK_LBLS);
         for (HWND h : { c->lblV, c->lblA, c->lblS }) SendMessageW(h, WM_SETFONT, (WPARAM)g_fSmallBold, FALSE);
         DWORD lvs = WS_TABSTOP | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER;
         c->lv = mk(WC_LISTVIEWW, L"", lvs | LVS_SINGLESEL, IDC_PK_VIDEO);
@@ -624,29 +625,29 @@ static INT_PTR CALLBACK PickerProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         UseAppCheckboxes(c->la);
         UseAppCheckboxes(c->ls);
         for (HWND l : { c->lv, c->la, c->ls }) MarkFrame(l, 2);
-        LvColumns(c->lv, { { L"ID", 110 }, { L"Risoluzione", 110 }, { L"FPS", 50 }, { L"Codec", 120 }, { L"Bitrate", 90 },
-                           { L"Dimensione", 90 }, { L"Tipo", 70 }, { L"Note", 160 } });
-        LvColumns(c->la, { { L"ID", 140 }, { L"Lingua", 90 }, { L"Codec", 90 }, { L"Bitrate", 90 }, { L"Dimensione", 90 },
-                           { L"Tipo", 70 }, { L"Note", 200 } });
-        LvColumns(c->ls, { { L"Lingua", 140 }, { L"Nome", 220 }, { L"Formati", 160 }, { L"Tipo", 130 } });
+        LvColumns(c->lv, { { L"ID", 110 }, { TR(L"Risoluzione"), 110 }, { L"FPS", 50 }, { L"Codec", 120 }, { L"Bitrate", 90 },
+                           { TR(L"Dimensione"), 90 }, { TR(L"Tipo"), 70 }, { TR(L"Note"), 160 } });
+        LvColumns(c->la, { { L"ID", 140 }, { TR(L"Lingua"), 90 }, { L"Codec", 90 }, { L"Bitrate", 90 }, { TR(L"Dimensione"), 90 },
+                           { TR(L"Tipo"), 70 }, { TR(L"Note"), 200 } });
+        LvColumns(c->ls, { { TR(L"Lingua"), 140 }, { TR(L"Nome"), 220 }, { TR(L"Formati"), 160 }, { TR(L"Tipo"), 130 } });
 
-        std::wstring none[8] = { L"—", L"Nessun video", L"", L"", L"", L"", L"", L"" };
+        std::wstring none[8] = { L"—", TR(L"Nessun video"), L"", L"", L"", L"", L"", L"" };
         LvRow(c->lv, 0, -1, none, 8);
         for (size_t i = 0; i < c->vids.size(); ++i) LvRow(c->lv, (int)i + 1, (LPARAM)i, c->vids[i].cols, 8);
         for (size_t i = 0; i < c->auds.size(); ++i) LvRow(c->la, (int)i, (LPARAM)i, c->auds[i].cols, 7);
         for (size_t i = 0; i < c->subs.size(); ++i) {
             std::wstring cols[4] = { U(c->subs[i].lang), c->subs[i].name, c->subs[i].exts,
-                                     c->subs[i].autoCap ? L"automatici" : L"originali" };
+                                     c->subs[i].autoCap ? TR(L"automatici") : TR(L"originali") };
             LvRow(c->ls, (int)i, (LPARAM)i, cols, 4);
         }
 
-        c->embed = mk(WC_BUTTONW, L"Sottotitoli dentro il video", WS_TABSTOP | BS_OWNERDRAW, IDC_PK_EMBED);
-        c->srt = mk(WC_BUTTONW, L"Converti in SRT", WS_TABSTOP | BS_OWNERDRAW, IDC_PK_SRT);
-        c->lblCont = mk(WC_STATICW, L"Formato file", SS_CENTERIMAGE, IDC_PK_INFO + 100);
+        c->embed = mk(WC_BUTTONW, TR(L"Sottotitoli dentro il video"), WS_TABSTOP | BS_OWNERDRAW, IDC_PK_EMBED);
+        c->srt = mk(WC_BUTTONW, TR(L"Converti in SRT"), WS_TABSTOP | BS_OWNERDRAW, IDC_PK_SRT);
+        c->lblCont = mk(WC_STATICW, TR(L"Formato file"), SS_CENTERIMAGE, IDC_PK_INFO + 100);
         c->cont = mk(WC_BUTTONW, L"MP4", WS_TABSTOP | BS_OWNERDRAW, IDC_PK_CONT);
         c->summary = mk(WC_STATICW, L"", SS_ENDELLIPSIS | SS_CENTERIMAGE | SS_NOPREFIX, IDC_PK_SUMMARY);
-        c->cancel = mk(WC_BUTTONW, L"Annulla", WS_TABSTOP | BS_OWNERDRAW, IDCANCEL);
-        c->ok = mk(WC_BUTTONW, L"Scarica", WS_TABSTOP | BS_OWNERDRAW, IDOK);
+        c->cancel = mk(WC_BUTTONW, TR(L"Annulla"), WS_TABSTOP | BS_OWNERDRAW, IDCANCEL);
+        c->ok = mk(WC_BUTTONW, TR(L"Scarica"), WS_TABSTOP | BS_OWNERDRAW, IDOK);
         SetWindowLongPtrW(c->embed, GWLP_USERDATA, 1);
         SetWindowLongPtrW(c->srt, GWLP_USERDATA, 1);
         SetWindowLongPtrW(c->cont, GWLP_USERDATA, g_set.preset.container);
@@ -716,7 +717,7 @@ static INT_PTR CALLBACK PickerProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             HMENU m = CreatePopupMenu();
             for (int i = 0; i < CountOf(kContainers); ++i)
                 AppendMenuW(m, MF_STRING, ID_PKCONT_BASE + i,
-                            (std::wstring(kContainers[i].label) + L"\t" + kContainers[i].hint).c_str());
+                            (std::wstring(kContainers[i].label()) + L"\t" + kContainers[i].hint()).c_str());
             int cur = (int)GetWindowLongPtrW(c->cont, GWLP_USERDATA);
             CheckMenuRadioItem(m, ID_PKCONT_BASE, ID_PKCONT_BASE + CountOf(kContainers) - 1, ID_PKCONT_BASE + cur, MF_BYCOMMAND);
             RECT r;
@@ -786,7 +787,7 @@ static void BuildQuickRows(const JVal& root, QuickCtx& c) {
     c.title = U(root.str("title"));
     std::wstring dur = FormatDuration(root.num("duration"));
     c.info = U(root.str("extractor_key", root.str("extractor")));
-    if (!dur.empty()) c.info += (c.info.empty() ? L"" : L"   ·   ") + std::wstring(L"durata ") + dur;
+    if (!dur.empty()) c.info += (c.info.empty() ? L"" : L"   ·   ") + std::wstring(TR(L"durata ")) + dur;
     const double duration = root.num("duration");
 
     struct Best { double tbr = -1, size = 0, fps = 0; std::string vc; bool muxed = false; };
@@ -830,9 +831,9 @@ static void BuildQuickRows(const JVal& root, QuickCtx& c) {
     if (bestAudioRate >= 0 || !byH.empty()) {
         QuickRow r;
         r.height = -2;
-        r.cols[0] = L"Solo audio";
+        r.cols[0] = TR(L"Solo audio");
         r.cols[1] = bestAudio > 0 ? L"~" + FormatBytes(bestAudio) : L"–";
-        r.cols[2] = std::wstring(L"come impostato: ") + kAudioFmts[g_set.preset.afmt].value;
+        r.cols[2] = std::wstring(TR(L"come impostato: ")) + kAudioFmts[g_set.preset.afmt].value();
         c.rows.push_back(std::move(r));
     }
 }
@@ -851,7 +852,7 @@ static void QuickLayout(HWND dlg, QuickCtx& c) {
     mv(c.lbl, m, y, W - 2 * m, S(20)); y += S(24);
     int by = H - m - btnH;
     mv(c.lv, m, y, W - 2 * m, by - S(14) - y);
-    int lc = TextWidth(g_fUi, L"Formato file") + S(10);
+    int lc = TextWidth(g_fUi, TR(L"Formato file")) + S(10);
     mv(c.lblCont, m, by, lc, btnH);
     mv(c.cont, m + lc, by, S(90), btnH);
     mv(c.ok, W - m - S(120), by, S(120), btnH);
@@ -868,7 +869,7 @@ static INT_PTR CALLBACK QuickProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     case WM_INITDIALOG: {
         c = reinterpret_cast<QuickCtx*>(lp);
         SetWindowLongPtrW(dlg, DWLP_USER, (LONG_PTR)c);
-        SetWindowTextW(dlg, L"Scegli la risoluzione");
+        SetWindowTextW(dlg, TR(L"Scegli la risoluzione"));
         SendMessageW(dlg, WM_SETICON, ICON_BIG, (LPARAM)g_appIcon);
         auto mk = [&](const wchar_t* cls, const wchar_t* text, DWORD style, int id, DWORD ex = 0) {
             HWND h = CreateWindowExW(ex, cls, text, WS_CHILD | WS_VISIBLE | style, 0, 0, 10, 10, dlg,
@@ -879,20 +880,20 @@ static INT_PTR CALLBACK QuickProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         c->title_ = mk(WC_STATICW, c->title.c_str(), SS_ENDELLIPSIS | SS_NOPREFIX, IDC_PK_TITLE);
         SendMessageW(c->title_, WM_SETFONT, (WPARAM)g_fTitle, FALSE);
         c->info_ = mk(WC_STATICW, c->info.c_str(), SS_ENDELLIPSIS | SS_NOPREFIX, IDC_PK_INFO);
-        c->lbl = mk(WC_STATICW, L"RISOLUZIONI DISPONIBILI PER QUESTO VIDEO", 0, IDC_PK_LBLV);
+        c->lbl = mk(WC_STATICW, TR(L"RISOLUZIONI DISPONIBILI PER QUESTO VIDEO"), 0, IDC_PK_LBLV);
         SendMessageW(c->lbl, WM_SETFONT, (WPARAM)g_fSmallBold, FALSE);
         c->lv = mk(WC_LISTVIEWW, L"", WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER, IDC_PK_LIST);
         DWORD ex = LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER;
         SendMessageW(c->lv, LVM_SETEXTENDEDLISTVIEWSTYLE, ex, ex);
-        LvColumns(c->lv, { { L"Risoluzione", 190 }, { L"Dimensione stimata", 140 }, { L"Dettagli", 200 } });
+        LvColumns(c->lv, { { TR(L"Risoluzione"), 190 }, { TR(L"Dimensione stimata"), 140 }, { TR(L"Dettagli"), 200 } });
         MarkFrame(c->lv, 2);
         for (size_t i = 0; i < c->rows.size(); ++i) LvRow(c->lv, (int)i, (LPARAM)i, c->rows[i].cols, 3);
-        c->lblCont = mk(WC_STATICW, L"Formato file", SS_CENTERIMAGE, IDC_PK_INFO + 101);
-        c->cont = mk(WC_BUTTONW, kContainers[c->container].value, WS_TABSTOP | BS_OWNERDRAW, IDC_PK_CONT);
+        c->lblCont = mk(WC_STATICW, TR(L"Formato file"), SS_CENTERIMAGE, IDC_PK_INFO + 101);
+        c->cont = mk(WC_BUTTONW, kContainers[c->container].value(), WS_TABSTOP | BS_OWNERDRAW, IDC_PK_CONT);
         SetWindowLongPtrW(c->cont, GWLP_USERDATA, c->container);
-        c->adv = mk(WC_BUTTONW, L"Avanzate...", WS_TABSTOP | BS_OWNERDRAW, IDC_PK_ADV);
-        c->cancel = mk(WC_BUTTONW, L"Annulla", WS_TABSTOP | BS_OWNERDRAW, IDCANCEL);
-        c->ok = mk(WC_BUTTONW, L"Scarica", WS_TABSTOP | BS_OWNERDRAW, IDOK);
+        c->adv = mk(WC_BUTTONW, TR(L"Avanzate..."), WS_TABSTOP | BS_OWNERDRAW, IDC_PK_ADV);
+        c->cancel = mk(WC_BUTTONW, TR(L"Annulla"), WS_TABSTOP | BS_OWNERDRAW, IDCANCEL);
+        c->ok = mk(WC_BUTTONW, TR(L"Scarica"), WS_TABSTOP | BS_OWNERDRAW, IDOK);
         for (HWND b : { c->cont, c->adv, c->cancel, c->ok }) SetWindowSubclass(b, BtnSubclass, 1, 0);
 
         // preselezione: la risoluzione piu' vicina (per difetto) a 1080p, altrimenti la prima
@@ -935,7 +936,7 @@ static INT_PTR CALLBACK QuickProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             HMENU m = CreatePopupMenu();
             for (int i = 0; i < CountOf(kContainers); ++i)
                 AppendMenuW(m, MF_STRING, ID_PKCONT_BASE + i,
-                            (std::wstring(kContainers[i].label) + L"\t" + kContainers[i].hint).c_str());
+                            (std::wstring(kContainers[i].label()) + L"\t" + kContainers[i].hint()).c_str());
             CheckMenuRadioItem(m, ID_PKCONT_BASE, ID_PKCONT_BASE + CountOf(kContainers) - 1, ID_PKCONT_BASE + c->container, MF_BYCOMMAND);
             RECT r;
             GetWindowRect(c->cont, &r);
@@ -944,7 +945,7 @@ static INT_PTR CALLBACK QuickProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             if (cmd >= ID_PKCONT_BASE && cmd < ID_PKCONT_BASE + CountOf(kContainers)) {
                 c->container = cmd - ID_PKCONT_BASE;
                 SetWindowLongPtrW(c->cont, GWLP_USERDATA, c->container);
-                SetWindowTextW(c->cont, kContainers[c->container].value);
+                SetWindowTextW(c->cont, kContainers[c->container].value());
             }
             return TRUE;
         }
@@ -981,6 +982,7 @@ static INT_PTR CALLBACK SettingsProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         return TRUE;
     case WM_INITDIALOG:
         SendMessageW(dlg, WM_SETICON, ICON_BIG, (LPARAM)g_appIcon);
+        TranslateWindow(dlg);   // testi della risorsa (in italiano)
         SetDlgItemTextW(dlg, IDC_SET_YTDLP, g_set.ytdlp.c_str());
         SetDlgItemTextW(dlg, IDC_SET_FFMPEG, g_set.ffmpeg.c_str());
         SetDlgItemTextW(dlg, IDC_SET_SUBLANGS, g_set.subLangs.c_str());
@@ -1081,9 +1083,9 @@ struct AboutComp {
 struct AboutVers { std::wstring v[3]; };
 
 struct AboutCtx {
-    AboutComp comp[3] = { { L"yt-dlp", L"estrazione dei link", {}, {}, false },
-                          { L"FFmpeg", L"unione, conversione, sottotitoli", {}, {}, false },
-                          { L"Deno", L"necessario a yt-dlp per YouTube", {}, {}, false } };
+    AboutComp comp[3] = { { L"yt-dlp", N_(L"estrazione dei link"), {}, {}, false },
+                          { L"FFmpeg", N_(L"unione, conversione, sottotitoli"), {}, {}, false },
+                          { L"Deno", N_(L"necessario a yt-dlp per YouTube"), {}, {}, false } };
     HFONT fHero = nullptr, fSect = nullptr;
     HWND update = nullptr, tools = nullptr, copy = nullptr, close = nullptr;
     RECT link{};          // area cliccabile del link al progetto
@@ -1122,11 +1124,11 @@ static std::wstring AboutText(const AboutCtx& c) {
     std::wstring s = std::wstring(kAppName) + L" " + kVersion + L"  (" + kRepoUrl + L")\r\n";
     for (const auto& k : c.comp) {
         s += std::wstring(k.name) + L": ";
-        if (k.path.empty()) s += L"non trovato";
+        if (k.path.empty()) s += TR(L"non trovato");
         else s += (k.version.empty() ? L"" : k.version + L"  ") + L"(" + k.path + L")";
         s += L"\r\n";
     }
-    s += L"Impostazioni: " + g_ini + L"\r\nStrumenti: " + BinDir() + L"\r\n";
+    s += TR(L"Impostazioni: ") + g_ini + TR(L"\r\nStrumenti: ") + BinDir() + L"\r\n";
     return s;
 }
 
@@ -1192,7 +1194,7 @@ static void AboutPaint(HWND dlg, HDC hdc, AboutCtx& c) {
     RECT t1{ tx, S(30), rc.right - S(24), S(72) };
     DrawText2(m.dc, kAppName, t1, c.fHero, P.text, DT_LEFT | DT_BOTTOM | DT_SINGLELINE);
     // pillola della versione
-    std::wstring ver = std::wstring(L"versione ") + kVersion;
+    std::wstring ver = std::wstring(TR(L"versione ")) + kVersion;
     int vw = TextWidth(g_fSmallBold, ver) + S(20);
     RECT vp{ tx, S(78), tx + vw, S(100) };
     {
@@ -1202,10 +1204,10 @@ static void AboutPaint(HWND dlg, HDC hdc, AboutCtx& c) {
     }
     DrawText2(m.dc, ver, vp, g_fSmallBold, RGB(255, 255, 255), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     RECT t3{ tx, S(106), rc.right - S(24), S(128) };
-    DrawText2(m.dc, L"Scarica video e audio da YouTube, RaiPlay e migliaia di siti, con download segmentato nativo.",
+    DrawText2(m.dc, TR(L"Scarica video e audio da YouTube, RaiPlay e migliaia di siti, con download segmentato nativo."),
               t3, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
 
-    DrawText2(m.dc, L"COMPONENTI", g.sect, c.fSect, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+    DrawText2(m.dc, TR(L"COMPONENTI"), g.sect, c.fSect, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     for (int i = 0; i < 3; ++i) {
         const AboutComp& k = c.comp[i];
         RECT r = g.rows[i];
@@ -1213,20 +1215,20 @@ static void AboutPaint(HWND dlg, HDC hdc, AboutCtx& c) {
         RECT n1{ x, r.top + S(7), x + S(90), r.top + S(27) };
         DrawText2(m.dc, k.name, n1, g_fBold, P.text, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         RECT rl{ x + S(76), r.top + S(7), r.right - S(170), r.top + S(27) };
-        DrawText2(m.dc, k.role, rl, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
-        std::wstring st = k.path.empty() ? L"non trovato" : (k.version.empty() ? (k.checked ? L"installato" : L"verifica…") : k.version);
+        DrawText2(m.dc, TR(k.role), rl, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+        std::wstring st = k.path.empty() ? TR(L"non trovato") : (k.version.empty() ? (k.checked ? TR(L"installato") : TR(L"verifica…")) : k.version);
         RECT sr{ r.right - S(170), r.top + S(7), r.right - S(14), r.top + S(27) };
         DrawText2(m.dc, st, sr, k.path.empty() ? g_fUi : g_fBold, k.path.empty() ? P.red : P.text,
                   DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
         RECT pr{ x, r.top + S(27), r.right - S(14), r.bottom - S(6) };
-        std::wstring ps = k.path.empty() ? L"Si scarica con “Aggiorna componenti” qui sotto" : k.path;
+        std::wstring ps = k.path.empty() ? TR(L"Si scarica con “Aggiorna componenti” qui sotto") : k.path;
         DrawText2(m.dc, ps, pr, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_PATH_ELLIPSIS);
     }
     RECT p1{ g.paths.left, g.paths.top, g.paths.right, g.paths.top + S(20) };
-    DrawText2(m.dc, L"Impostazioni:  " + g_ini, p1, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_PATH_ELLIPSIS);
+    DrawText2(m.dc, TR(L"Impostazioni:  ") + g_ini, p1, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_PATH_ELLIPSIS);
     // progetto su GitHub (link) e crediti
     RECT p2{ g.paths.left, g.paths.top + S(20), g.paths.right, g.paths.bottom };
-    const wchar_t* lead = L"Progetto:  ";
+    const wchar_t* lead = TR(L"Progetto:  ");
     int lw = TextWidth(g_fSmall, lead), kw = TextWidth(g_fSmallBold, kRepoShort);
     DrawText2(m.dc, lead, p2, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     c.link = { p2.left + lw, p2.top, p2.left + lw + kw, p2.bottom };
@@ -1239,14 +1241,14 @@ static void AboutPaint(HWND dlg, HDC hdc, AboutCtx& c) {
         DeleteObject(ub);
     }
     RECT cr{ c.link.right + S(14), p2.top, p2.right, p2.bottom };
-    DrawText2(m.dc, L"\u00b7  basato su yt-dlp e FFmpeg", cr, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawText2(m.dc, TR(L"\u00b7  GPL-3.0  \u00b7  basato su yt-dlp e FFmpeg"), cr, g_fSmall, P.muted, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
     m.Blit(0, 0);
 }
 
 static void AboutRefreshButtons(AboutCtx& c) {
     bool missing = false;
     for (auto& k : c.comp) if (k.path.empty()) missing = true;
-    SetWindowTextW(c.update, missing ? L"Scarica componenti" : L"Aggiorna yt-dlp");
+    SetWindowTextW(c.update, missing ? TR(L"Scarica componenti") : TR(L"Aggiorna yt-dlp"));
     EnableWindow(c.update, !g_toolBusy);
     InvalidateRect(c.update, nullptr, FALSE);
 }
@@ -1256,13 +1258,13 @@ static void AboutLayout(HWND dlg, AboutCtx& c) {
     GetClientRect(dlg, &rc);
     AboutGeo g = AboutLayoutGeo(rc);
     int y = g.buttons.top, h = g.buttons.bottom - g.buttons.top, x = g.buttons.right;
-    int wc = TextWidth(g_fUi, L"Chiudi") + S(40);
+    int wc = TextWidth(g_fUi, TR(L"Chiudi")) + S(40);
     MoveWindow(c.close, x - wc, y, wc, h, FALSE); x -= wc + S(8);
-    int wu = TextWidth(g_fBold, L"Scarica componenti") + S(58);
+    int wu = TextWidth(g_fBold, TR(L"Scarica componenti")) + S(58);
     MoveWindow(c.update, x - wu, y, wu, h, FALSE);
-    int wt = TextWidth(g_fUi, L"Strumenti") + S(56);
+    int wt = TextWidth(g_fUi, TR(L"Strumenti")) + S(56);
     MoveWindow(c.tools, g.buttons.left, y, wt, h, FALSE);
-    int wcp = TextWidth(g_fUi, L"Copia") + S(56);
+    int wcp = TextWidth(g_fUi, TR(L"Copia")) + S(56);
     MoveWindow(c.copy, g.buttons.left + wt + S(8), y, wcp, h, FALSE);
 }
 
@@ -1272,6 +1274,7 @@ static INT_PTR CALLBACK AboutProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     case WM_INITDIALOG: {
         c = new AboutCtx;
         SetWindowLongPtrW(dlg, DWLP_USER, (LONG_PTR)c);
+        TranslateWindow(dlg);
         SendMessageW(dlg, WM_SETICON, ICON_BIG, (LPARAM)g_appIcon);
         c->fHero = MkFont(L"Segoe UI", 24, FW_SEMIBOLD);
         c->fSect = MkFont(L"Segoe UI", 8, FW_BOLD);
@@ -1285,10 +1288,10 @@ static INT_PTR CALLBACK AboutProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             SetWindowSubclass(h, BtnSubclass, 1, 0);
             return h;
         };
-        c->tools = mk(L"Strumenti", IDC_AB_TOOLS);
-        c->copy = mk(L"Copia", IDC_AB_COPY);
-        c->update = mk(L"Aggiorna yt-dlp", IDC_AB_UPDATE);
-        c->close = mk(L"Chiudi", IDCANCEL);
+        c->tools = mk(TR(L"Strumenti"), IDC_AB_TOOLS);
+        c->copy = mk(TR(L"Copia"), IDC_AB_COPY);
+        c->update = mk(TR(L"Aggiorna yt-dlp"), IDC_AB_UPDATE);
+        c->close = mk(TR(L"Chiudi"), IDCANCEL);
         SetTitleBarDark(dlg, g_dark);
         RECT wr{ 0, 0, S(600), S(500) };
         AdjustWindowRectEx(&wr, (DWORD)GetWindowLongW(dlg, GWL_STYLE), FALSE, (DWORD)GetWindowLongW(dlg, GWL_EXSTYLE));
@@ -1361,7 +1364,7 @@ static INT_PTR CALLBACK AboutProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             return TRUE;
         case IDC_AB_COPY:
             SetClipboardText(AboutText(*c));
-            SetWindowTextW(c->copy, L"Copiato");
+            SetWindowTextW(c->copy, TR(L"Copiato"));
             InvalidateRect(c->copy, nullptr, FALSE);
             return TRUE;
         case IDC_AB_UPDATE: {

@@ -5,6 +5,32 @@ Versioni `x.y.z`: `x` cambi incompatibili (impostazioni, formato dei file), `y` 
 
 Progetto: <https://github.com/Kyo89-sudo/Stackly>
 
+## 0.6.0 — localizzazione inglese e licenza GPL
+
+### Localizzazione
+- **`src/lang.h`**: `TR(const wchar_t*)` restituisce il testo italiano o la traduzione inglese da `kTrTable`
+  (mappa costruita alla prima chiamata; senza traduzione resta l'italiano). `N_()` marca i testi delle
+  tabelle costanti (`Choice`), tradotti al momento dell'uso: `Choice` ha ora `label()/value()/hint()`.
+- **Tabella generata**: `tools/i18n.py` estrae `TR(L"...")`/`N_(L"...")` dai sorgenti e i testi di
+  `app.rc` (titoli, etichette, pulsanti, voci di menu), li confronta con `tools/lang_en.json` e scrive
+  `src/lang_table.inc` (letterali ASCII con `\uXXXX`). Esce con errore se manca una traduzione;
+  `make_release.sh` lo esegue prima della build. 230 testi.
+- **Risorse**: `TranslateWindow` (Impostazioni, Informazioni) e `TranslateMenu` (menu della coda)
+  traducono a runtime i testi dei dialoghi e dei menu caricati da risorsa.
+- **Lingua**: `SetLanguage(0 Windows | 1 it | 2 en)` letta dall'INI (`Language`) all'inizio di `wWinMain`,
+  prima di qualunque messaggio. Menu ⋯ → *Lingua / Language*; il cambio chiede il riavvio (domanda
+  bilingue) e avvia la nuova istanza dopo `QuitApp`.
+- I testi composti sono stati spezzati in parti traducibili (contatori della barra di stato, riepiloghi
+  della finestra Formati); le righe `ERROR:` mantengono il prefisso fuori dalla traduzione, perché
+  `OnLine` lo riconosce.
+- **Installer**: `T(it, en)` in base a `GetUserDefaultUILanguage()`.
+
+### Altro
+- Licenza **GPL-3.0** (`LICENSE`, testo ufficiale); citata in README e nella finestra Informazioni.
+- Pulsante profilo: margine fisso portato a 92 px e massimo a 420 px (`Layout`): il testo veniva tagliato
+  ("Video + audio · Auto · M…").
+- README con screenshot (`docs/`) e sezione in inglese.
+
 ## 0.5.3 — correzioni e robustezza
 
 ### Processi figli (`engine.h`)

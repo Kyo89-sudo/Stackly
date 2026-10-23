@@ -72,7 +72,7 @@ static bool EnsureFolder() {
     if (!DirExists(g_set.folder)) {
         int r = SHCreateDirectoryExW(g_hwnd, g_set.folder.c_str(), nullptr);
         if (r != ERROR_SUCCESS && r != ERROR_ALREADY_EXISTS && r != ERROR_FILE_EXISTS) {
-            MessageBoxW(g_hwnd, (L"Impossibile usare la cartella di destinazione:\n" + g_set.folder).c_str(), kAppName,
+            MessageBoxW(g_hwnd, (TR(L"Impossibile usare la cartella di destinazione:\n") + g_set.folder).c_str(), kAppName,
                         MB_ICONERROR);
             return false;
         }
@@ -113,7 +113,7 @@ static void AddUrls(const std::wstring& text, bool forceManual = false) {
     std::vector<std::wstring> urls = ExtractUrls(text);
     if (urls.empty()) {
         if (!Trim(text).empty())
-            MessageBoxW(g_hwnd, L"Non ho trovato link validi (devono iniziare con http:// o https://).", kAppName,
+            MessageBoxW(g_hwnd, TR(L"Non ho trovato link validi (devono iniziare con http:// o https://)."), kAppName,
                         MB_ICONINFORMATION);
         SetFocus(g_url);
         return;
@@ -147,7 +147,7 @@ static void OpenFullPicker(const JVal& root, const std::wstring& url) {
     ctx.hasFfmpeg = !ResolveTool(g_set.ffmpeg, L"ffmpeg.exe").empty();
     BuildPickerRows(root, ctx);
     if (ctx.vids.empty() && ctx.auds.empty() && ctx.subs.empty()) {
-        MessageBoxW(g_hwnd, L"Nessun formato scaricabile trovato per questo link.", kAppName, MB_ICONINFORMATION);
+        MessageBoxW(g_hwnd, TR(L"Nessun formato scaricabile trovato per questo link."), kAppName, MB_ICONINFORMATION);
         return;
     }
     if (DialogBoxParamW(g_inst, MAKEINTRESOURCEW(IDD_PICKER), g_hwnd, PickerProc, (LPARAM)&ctx) == IDOK)
@@ -169,19 +169,18 @@ static void OnAnalyzed(AnalyzeResult* raw) {
             pr.vq = 0;
             QueueAndStart(r->url, nullptr, &pr);
         } else {
-            MessageBoxW(g_hwnd, (L"Non riesco ad analizzare il link:\n" + r->url + L"\n\n" + r->err).c_str(), kAppName,
+            MessageBoxW(g_hwnd, (TR(L"Non riesco ad analizzare il link:\n") + r->url + L"\n\n" + r->err).c_str(), kAppName,
                         MB_ICONWARNING);
         }
     } else if (!JParser(r->json.data(), r->json.size()).parse(root) || root.t != JVal::Obj) {
-        MessageBoxW(g_hwnd, L"Risposta di yt-dlp non valida.", kAppName, MB_ICONWARNING);
+        MessageBoxW(g_hwnd, TR(L"Risposta di yt-dlp non valida."), kAppName, MB_ICONWARNING);
     } else if (root.str("_type") == "playlist") {
         if (r->quick) {
             Preset pr = g_set.preset;
             pr.vq = 0;
             QueueAndStart(r->url, nullptr, &pr);
         } else {
-            MessageBoxW(g_hwnd, L"Questo link è una playlist: per le playlist scegli il tipo Video o Solo audio "
-                                L"e attiva \"Playlist\".", kAppName, MB_ICONINFORMATION);
+            MessageBoxW(g_hwnd, TR(L"Questo link è una playlist: per le playlist scegli un tipo diverso da \"Scegli ogni volta\" e attiva \"Playlist intera\"."), kAppName, MB_ICONINFORMATION);
         }
     } else if (r->quick) {
         QuickCtx q;
@@ -503,11 +502,11 @@ static void ShowMain() {
 
 static void TrayMenu() {
     HMENU m = CreatePopupMenu();
-    AppendMenuW(m, MF_STRING, ID_TRAY_SHOW, L"Mostra Stackly");
-    AppendMenuW(m, MF_STRING, ID_FILE_PASTE, L"Scarica il link negli appunti");
-    AppendMenuW(m, MF_STRING, ID_FILE_OPENFOLDER, L"Apri cartella download");
+    AppendMenuW(m, MF_STRING, ID_TRAY_SHOW, TR(L"Mostra Stackly"));
+    AppendMenuW(m, MF_STRING, ID_FILE_PASTE, TR(L"Scarica il link negli appunti"));
+    AppendMenuW(m, MF_STRING, ID_FILE_OPENFOLDER, TR(L"Apri cartella download"));
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(m, MF_STRING, ID_TRAY_EXIT, L"Esci");
+    AppendMenuW(m, MF_STRING, ID_TRAY_EXIT, TR(L"Esci"));
     SetMenuDefaultItem(m, ID_TRAY_SHOW, FALSE);
     POINT pt;
     GetCursorPos(&pt);
@@ -523,7 +522,7 @@ static void UpdateTrayTip() {
     for (auto& p : g_items) if (IsActive(*p)) { ++a; sum += p->pctValue; }
     if (a) {
         wchar_t b[96];
-        swprintf(b, 96, L"Stackly – %d in download (%.0f%%)", a, sum / a);
+        swprintf(b, 96, TR(L"Stackly – %d in download (%.0f%%)"), a, sum / a);
         TrayTip(b);
     } else {
         TrayTip(L"Stackly");
@@ -539,7 +538,7 @@ static const int kHeaderH = 64, kFooterH = 34;
 static std::wstring ProfileText() {
     const Preset& p = g_set.preset;
     std::wstring t = PresetLabel(p, p.container, g_set.subs && p.kind == DK_VIDEO);
-    if (g_set.playlist && p.kind != DK_MANUAL) t += L" \u00b7 Playlist";
+    if (g_set.playlist && p.kind != DK_MANUAL) t += TR(L" \u00b7 Playlist");
     return t;
 }
 
@@ -563,11 +562,12 @@ static void Layout() {
     mv(g_bMore, x - gb, hy - gb / 2, gb, gb);       x -= gb + S(2);
     mv(g_bSettings, x - gb, hy - gb / 2, gb, gb);   x -= gb + S(2);
     mv(g_bTheme, x - gb, hy - gb / 2, gb, gb);      x -= gb + S(12);
-    int wd = TextWidth(g_fBold, L"Scarica") + S(68);
+    int wd = TextWidth(g_fBold, TR(L"Scarica")) + S(68);
     mv(g_bDownload, x - wd, hy - bh / 2, wd, bh);   x -= wd + S(10);
 
     int px = m + S(28) + S(12);
-    int wp = std::clamp(TextWidth(g_fUi, ProfileText()) + S(70), S(180), S(320));
+    // icona del tipo + testo + freccetta: lo spazio fisso e' quello dei margini interni di BK_FIELD
+    int wp = std::clamp(TextWidth(g_fUi, ProfileText()) + S(92), S(180), S(420));
     mv(g_bProfile, px, hy - bh / 2, wp, bh);
     int ux = px + wp + S(10);
     g_rcUrl = { ux, hy - bh / 2, std::max(ux + S(160), x), hy + bh / 2 };
@@ -631,10 +631,10 @@ static void Paint(HDC hdc) {
         else if (p->st == St::Done) ++dn;
         else if (p->st == St::Error) ++e;
     }
-    std::wstring right = std::to_wstring(a) + L" in download   ·   " + std::to_wstring(q) + L" in coda   ·   " +
-                         std::to_wstring(dn) + L" completati";
-    if (e) right += L"   ·   " + std::to_wstring(e) + L" errori";
-    if (!g_analyzeQueue.empty()) right += L"   ·   " + std::to_wstring(g_analyzeQueue.size()) + L" da analizzare";
+    std::wstring right = std::to_wstring(a) + TR(L" in download") + L"   ·   " + std::to_wstring(q) + TR(L" in coda") + L"   ·   " +
+                         std::to_wstring(dn) + TR(L" completati");
+    if (e) right += L"   ·   " + std::to_wstring(e) + TR(L" errori");
+    if (!g_analyzeQueue.empty()) right += L"   ·   " + std::to_wstring(g_analyzeQueue.size()) + TR(L" da analizzare");
     RECT fbr{};
     GetWindowRect(g_bFolder, &fbr);
     MapWindowPoints(nullptr, g_hwnd, (POINT*)&fbr, 2);
@@ -653,12 +653,12 @@ static void Paint(HDC hdc) {
         RECT ir{ 0, cy - S(110), rc.right, cy - S(30) };
         DrawGlyph(m.dc, G_DOWNLOAD, ir, g_fIconLg, g_dark ? P.border : Mix(P.border, P.muted, 0.35));
         RECT h1{ 0, cy - S(22), rc.right, cy + S(8) };
-        DrawText2(m.dc, L"Nessun download", h1, g_fHead, P.text, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        DrawText2(m.dc, TR(L"Nessun download"), h1, g_fHead, P.text, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
         RECT h2{ 0, cy + S(12), rc.right, cy + S(34) };
-        DrawText2(m.dc, L"Incolla un link nella barra in alto: YouTube, RaiPlay, Vimeo, SoundCloud, Twitch e migliaia di altri siti",
+        DrawText2(m.dc, TR(L"Incolla un link nella barra in alto: YouTube, RaiPlay, Vimeo, SoundCloud, Twitch e migliaia di altri siti"),
                   h2, g_fUi, P.muted, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
         RECT h3{ S(20), cy + S(40), rc.right - S(20), cy + S(62) };
-        DrawText2(m.dc, L"Invio = scarica col profilo a sinistra   ·   icona filtro = scegli video, audio e sottotitoli   ·   Ctrl+Maiusc+V = incolla e scarica",
+        DrawText2(m.dc, TR(L"Invio = scarica col profilo a sinistra   ·   icona filtro = scegli video, audio e sottotitoli   ·   Ctrl+Maiusc+V = incolla e scarica"),
                   h3, g_fSmall, P.muted, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
     }
     m.Blit(0, 0);
@@ -691,11 +691,11 @@ static void UpdateChipTexts() {
 static void CreateControls() {
     g_url = CreateWindowExW(0, WC_EDITW, L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, 0, 0, 10, 10, g_hwnd,
                             (HMENU)(INT_PTR)IDC_URL, g_inst, nullptr);
-    SendMessageW(g_url, EM_SETCUEBANNER, TRUE, (LPARAM)L"Incolla un link (o più link) e premi Invio");
+    SendMessageW(g_url, EM_SETCUEBANNER, TRUE, (LPARAM)TR(L"Incolla un link (o più link) e premi Invio"));
     SendMessageW(g_url, EM_SETLIMITTEXT, 1 << 20, 0);
     g_bPaste    = Btn(L"", IDC_B_PASTE);
     g_bFormats  = Btn(L"", IDC_B_FORMATS);
-    g_bDownload = Btn(L"Scarica", IDC_B_DOWNLOAD);
+    g_bDownload = Btn(TR(L"Scarica"), IDC_B_DOWNLOAD);
     g_bTheme    = Btn(L"", IDC_B_THEME);
     g_bSettings = Btn(L"", IDC_B_SETTINGS);
     g_bMore     = Btn(L"", IDC_B_MORE);
@@ -719,14 +719,14 @@ static void CreateControls() {
         ti.lpszText = const_cast<LPWSTR>(text);
         SendMessageW(tip, TTM_ADDTOOLW, 0, (LPARAM)&ti);
     };
-    addTip(g_bPaste, L"Incolla dagli appunti");
-    addTip(g_bFormats, L"Formati: analizza il link e scegli video, audio e sottotitoli");
-    addTip(g_bDownload, L"Scarica con il formato selezionato (Invio)");
-    addTip(g_bTheme, L"Tema: segue Windows / chiaro / scuro");
-    addTip(g_bSettings, L"Impostazioni");
-    addTip(g_bMore, L"Menu");
-    addTip(g_bFolder, L"Cartella di destinazione: clic per aprirla o cambiarla");
-    addTip(g_bProfile, L"Profilo di download: tipo, qualit\u00e0, formato, playlist e sottotitoli");
+    addTip(g_bPaste, TR(L"Incolla dagli appunti"));
+    addTip(g_bFormats, TR(L"Formati: analizza il link e scegli video, audio e sottotitoli"));
+    addTip(g_bDownload, TR(L"Scarica con il formato selezionato (Invio)"));
+    addTip(g_bTheme, TR(L"Tema: segue Windows / chiaro / scuro"));
+    addTip(g_bSettings, TR(L"Impostazioni"));
+    addTip(g_bMore, TR(L"Menu"));
+    addTip(g_bFolder, TR(L"Cartella di destinazione: clic per aprirla o cambiarla"));
+    addTip(g_bProfile, TR(L"Profilo di download: tipo, qualit\u00e0, formato, playlist e sottotitoli"));
 }
 
 static void ApplyTheme() {
@@ -750,24 +750,30 @@ static void PopupBelow(HWND btn, HMENU m, bool rightAlign) {
 
 static void MoreMenu() {
     HMENU m = CreatePopupMenu();
-    AppendMenuW(m, MF_STRING, ID_FILE_PASTE, L"Incolla link e scarica\tCtrl+Maiusc+V");
-    AppendMenuW(m, MF_STRING, ID_FILE_OPENFOLDER, L"Apri cartella download\tCtrl+O");
+    AppendMenuW(m, MF_STRING, ID_FILE_PASTE, TR(L"Incolla link e scarica\tCtrl+Maiusc+V"));
+    AppendMenuW(m, MF_STRING, ID_FILE_OPENFOLDER, TR(L"Apri cartella download\tCtrl+O"));
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(m, MF_STRING, ID_DL_CLEARDONE, L"Rimuovi i completati");
-    AppendMenuW(m, MF_STRING, ID_DL_CANCELALL, L"Annulla tutti");
+    AppendMenuW(m, MF_STRING, ID_DL_CLEARDONE, TR(L"Rimuovi i completati"));
+    AppendMenuW(m, MF_STRING, ID_DL_CANCELALL, TR(L"Annulla tutti"));
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
     UINT busy = g_toolBusy ? MF_GRAYED : 0;
-    AppendMenuW(m, MF_STRING | busy, ID_TOOLS_UPD_YTDLP, L"Aggiorna / scarica yt-dlp");
-    AppendMenuW(m, MF_STRING | busy, ID_TOOLS_GET_FFMPEG, L"Scarica / aggiorna ffmpeg");
-    AppendMenuW(m, MF_STRING | busy, ID_TOOLS_GET_DENO, L"Scarica / aggiorna Deno");
-    AppendMenuW(m, MF_STRING, ID_TOOLS_OPENBIN, L"Apri cartella strumenti");
+    AppendMenuW(m, MF_STRING | busy, ID_TOOLS_UPD_YTDLP, TR(L"Aggiorna / scarica yt-dlp"));
+    AppendMenuW(m, MF_STRING | busy, ID_TOOLS_GET_FFMPEG, TR(L"Scarica / aggiorna ffmpeg"));
+    AppendMenuW(m, MF_STRING | busy, ID_TOOLS_GET_DENO, TR(L"Scarica / aggiorna Deno"));
+    AppendMenuW(m, MF_STRING, ID_TOOLS_OPENBIN, TR(L"Apri cartella strumenti"));
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(m, MF_STRING, ID_FILE_SETTINGS, L"Impostazioni...");
-    AppendMenuW(m, MF_STRING, ID_HELP_GITHUB, L"Stackly su GitHub");
-    AppendMenuW(m, MF_STRING, ID_HELP_ISSUES, L"Segnala un problema...");
-    AppendMenuW(m, MF_STRING, ID_HELP_ABOUT, L"Informazioni su Stackly");
+    AppendMenuW(m, MF_STRING, ID_FILE_SETTINGS, TR(L"Impostazioni..."));
+    HMENU lang = CreatePopupMenu();
+    AppendMenuW(lang, MF_STRING, ID_LANG_AUTO, TR(L"Automatica (come Windows)"));
+    AppendMenuW(lang, MF_STRING, ID_LANG_IT, L"Italiano");
+    AppendMenuW(lang, MF_STRING, ID_LANG_EN, L"English");
+    CheckMenuRadioItem(lang, ID_LANG_AUTO, ID_LANG_EN, ID_LANG_AUTO + g_set.lang, MF_BYCOMMAND);
+    AppendMenuW(m, MF_POPUP, (UINT_PTR)lang, L"Lingua / Language");
+    AppendMenuW(m, MF_STRING, ID_HELP_GITHUB, TR(L"Stackly su GitHub"));
+    AppendMenuW(m, MF_STRING, ID_HELP_ISSUES, TR(L"Segnala un problema..."));
+    AppendMenuW(m, MF_STRING, ID_HELP_ABOUT, TR(L"Informazioni su Stackly"));
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(m, MF_STRING, ID_TRAY_EXIT, L"Esci");
+    AppendMenuW(m, MF_STRING, ID_TRAY_EXIT, TR(L"Esci"));
     PopupBelow(g_bMore, m, true);
     DestroyMenu(m);
 }
@@ -775,8 +781,8 @@ static void MoreMenu() {
 static HMENU ChoiceSub(const Choice* items, int n, int base, int current) {
     HMENU m = CreatePopupMenu();
     for (int i = 0; i < n; ++i) {
-        std::wstring t = items[i].label;
-        if (items[i].hint) t += std::wstring(L"\t") + items[i].hint;
+        std::wstring t = items[i].label();
+        if (items[i].hint()) t += std::wstring(L"\t") + items[i].hint();
         AppendMenuW(m, MF_STRING, base + i, t.c_str());
     }
     CheckMenuRadioItem(m, base, base + n - 1, base + current, MF_BYCOMMAND);
@@ -796,48 +802,48 @@ static void ProfileMenu() {
         AppendMenuW(m, MF_STRING | (on ? MF_CHECKED : 0) | (enabled ? 0 : MF_GRAYED), id, label);
     };
 
-    title(L"COSA SCARICARE");
+    title(TR(L"COSA SCARICARE"));
     for (int kind : kKindOrder) {
-        std::wstring t = std::wstring(kKinds[kind].label) + L"\t" + kKinds[kind].hint;
+        std::wstring t = std::wstring(kKinds[kind].label()) + L"\t" + kKinds[kind].hint();
         AppendMenuW(m, MF_STRING, ID_KIND_BASE + kind, t.c_str());
     }
     CheckMenuRadioItem(m, ID_KIND_BASE, ID_KIND_BASE + CountOf(kKinds) - 1, ID_KIND_BASE + k, MF_BYCOMMAND);
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
 
     if (KindIsVideo(k)) {
-        title(k == DK_VIDEO ? L"VIDEO + AUDIO" : L"SOLO VIDEO");
-        sub(L"Qualità", kVideoQ[p.vq].value, ChoiceSub(kVideoQ, CountOf(kVideoQ), ID_VQ_BASE, p.vq));
-        sub(L"Contenitore", kContainers[p.container].value,
+        title(k == DK_VIDEO ? TR(L"VIDEO + AUDIO") : TR(L"SOLO VIDEO"));
+        sub(TR(L"Qualità"), kVideoQ[p.vq].value(), ChoiceSub(kVideoQ, CountOf(kVideoQ), ID_VQ_BASE, p.vq));
+        sub(TR(L"Contenitore"), kContainers[p.container].value(),
             ChoiceSub(kContainers, CountOf(kContainers), ID_CONT_BASE, p.container));
-        if (k == DK_VIDEO) check(ID_OPT_SUBS, L"Sottotitoli nel video\tlingue nelle Impostazioni", g_set.subs);
+        if (k == DK_VIDEO) check(ID_OPT_SUBS, TR(L"Sottotitoli nel video\tlingue nelle Impostazioni"), g_set.subs);
     } else if (k == DK_AUDIO) {
-        title(L"SOLO AUDIO");
-        sub(L"Formato", kAudioFmts[p.afmt].value, ChoiceSub(kAudioFmts, CountOf(kAudioFmts), ID_AFMT_BASE, p.afmt));
-        sub(L"Qualità", p.afmt == 2 ? L"come l'originale" : kAudioQ[p.aq].value,
+        title(TR(L"SOLO AUDIO"));
+        sub(TR(L"Formato"), kAudioFmts[p.afmt].value(), ChoiceSub(kAudioFmts, CountOf(kAudioFmts), ID_AFMT_BASE, p.afmt));
+        sub(TR(L"Qualità"), p.afmt == 2 ? TR(L"come l'originale") : kAudioQ[p.aq].value(),
             ChoiceSub(kAudioQ, CountOf(kAudioQ), ID_AQ_BASE, p.aq), p.afmt != 2);
     } else if (k == DK_SUBS) {
-        title(L"SOLO SOTTOTITOLI");
-        sub(L"Formato", kSubFmts[p.subfmt].value, ChoiceSub(kSubFmts, CountOf(kSubFmts), ID_SUBF_BASE, p.subfmt));
-        check(ID_OPT_AUTOSUBS, L"Anche quelli generati automaticamente", g_set.autoSubs);
-        AppendMenuW(m, MF_STRING | MF_GRAYED, 0, (L"Lingue\t" + g_set.subLangs).c_str());
+        title(TR(L"SOLO SOTTOTITOLI"));
+        sub(TR(L"Formato"), kSubFmts[p.subfmt].value(), ChoiceSub(kSubFmts, CountOf(kSubFmts), ID_SUBF_BASE, p.subfmt));
+        check(ID_OPT_AUTOSUBS, TR(L"Anche quelli generati automaticamente"), g_set.autoSubs);
+        AppendMenuW(m, MF_STRING | MF_GRAYED, 0, (TR(L"Lingue\t") + g_set.subLangs).c_str());
     } else {
-        title(L"SCEGLI OGNI VOLTA");
-        AppendMenuW(m, MF_STRING | MF_GRAYED, 0, L"Analizza il link: scegli tu video, audio e sottotitoli");
+        title(TR(L"SCEGLI OGNI VOLTA"));
+        AppendMenuW(m, MF_STRING | MF_GRAYED, 0, TR(L"Analizza il link: scegli tu video, audio e sottotitoli"));
     }
     if (k != DK_MANUAL) {
         AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-        check(ID_OPT_PLAYLIST, L"Playlist intera\tse il link è una playlist o un canale", g_set.playlist);
+        check(ID_OPT_PLAYLIST, TR(L"Playlist intera\tse il link è una playlist o un canale"), g_set.playlist);
     }
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(m, MF_STRING, ID_OPT_FORMATS, L"Scegli i formati per questo link...");
+    AppendMenuW(m, MF_STRING, ID_OPT_FORMATS, TR(L"Scegli i formati per questo link..."));
     PopupBelow(g_bProfile, m, false);
     DestroyMenu(m);   // distrugge anche i sottomenu
 }
 
 static void FolderMenu() {
     HMENU m = CreatePopupMenu();
-    AppendMenuW(m, MF_STRING, ID_FOLDER_OPEN, L"Apri cartella\tCtrl+O");
-    AppendMenuW(m, MF_STRING, ID_FOLDER_CHANGE, L"Cambia cartella...");
+    AppendMenuW(m, MF_STRING, ID_FOLDER_OPEN, TR(L"Apri cartella\tCtrl+O"));
+    AppendMenuW(m, MF_STRING, ID_FOLDER_CHANGE, TR(L"Cambia cartella..."));
     RECT r;
     GetWindowRect(g_bFolder, &r);
     TrackPopupMenu(m, TPM_LEFTALIGN | TPM_BOTTOMALIGN, r.left, r.top - S(4), 0, g_hwnd, nullptr);
@@ -846,9 +852,9 @@ static void FolderMenu() {
 
 static void ThemeMenu() {
     HMENU m = CreatePopupMenu();
-    AppendMenuW(m, MF_STRING, ID_THEME_SYSTEM, L"Segui Windows");
-    AppendMenuW(m, MF_STRING, ID_THEME_LIGHT, L"Chiaro");
-    AppendMenuW(m, MF_STRING, ID_THEME_DARK, L"Scuro");
+    AppendMenuW(m, MF_STRING, ID_THEME_SYSTEM, TR(L"Segui Windows"));
+    AppendMenuW(m, MF_STRING, ID_THEME_LIGHT, TR(L"Chiaro"));
+    AppendMenuW(m, MF_STRING, ID_THEME_DARK, TR(L"Scuro"));
     CheckMenuRadioItem(m, ID_THEME_SYSTEM, ID_THEME_DARK, ID_THEME_SYSTEM + g_set.theme, MF_BYCOMMAND);
     PopupBelow(g_bTheme, m, true);
     DestroyMenu(m);
@@ -876,6 +882,7 @@ static void ContextMenu(LPARAM lp) {
     if (SendMessageW(g_list, LB_GETSELCOUNT, 0, 0) <= 0) return;
     HMENU menu = LoadMenuW(g_inst, MAKEINTRESOURCEW(IDR_LISTMENU));
     HMENU sub = GetSubMenu(menu, 0);
+    TranslateMenu(sub);
     TrackPopupMenu(sub, TPM_RIGHTBUTTON, pt.x, pt.y, 0, g_hwnd, nullptr);
     DestroyMenu(menu);
 }
@@ -899,8 +906,7 @@ static void QuitApp(bool ask) {
     for (auto& p : g_items) if (IsActive(*p)) ++active;
     if (ask && active) {
         ShowMain();
-        if (MessageBoxW(g_hwnd, L"Ci sono download in corso. Uscire e interromperli?\n\n"
-                                L"I download segmentati riprendono da dove erano se riaggiungi lo stesso link con le stesse opzioni.",
+        if (MessageBoxW(g_hwnd, TR(L"Ci sono download in corso. Uscire e interromperli?\n\nI download segmentati riprendono da dove erano se riaggiungi lo stesso link con le stesse opzioni."),
                         kAppName, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) != IDYES)
             return;
     }
@@ -1052,7 +1058,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             std::wstring t = GetText(g_url);
             if (Trim(t).empty()) t = ClipboardText();
             if (ExtractUrls(t).empty()) {
-                MessageBoxW(hwnd, L"Incolla prima un link nella barra in alto.", kAppName, MB_ICONINFORMATION);
+                MessageBoxW(hwnd, TR(L"Incolla prima un link nella barra in alto."), kAppName, MB_ICONINFORMATION);
                 SetFocus(g_url);
             } else {
                 AddUrls(t, true);
@@ -1082,6 +1088,27 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 UpdateChipTexts();
                 Layout();
                 SaveSettings();
+            }
+            return 0;
+        }
+        case ID_LANG_AUTO: case ID_LANG_IT: case ID_LANG_EN: {
+            int pref = id - ID_LANG_AUTO;
+            if (pref == g_set.lang) return 0;
+            bool wasEn = g_en;
+            g_set.lang = pref;
+            SaveSettings();
+            SetLanguage(pref);
+            bool nowEn = g_en;
+            g_en = wasEn;   // l'interfaccia aperta resta nella lingua attuale fino al riavvio
+            if (nowEn == wasEn) return 0;
+            // domanda in entrambe le lingue: chi la legge ha appena scelto l'altra
+            if (MessageBoxW(hwnd, L"Riavviare Stackly ora per cambiare lingua?\nRestart Stackly now to change the language?",
+                            kAppName, MB_ICONQUESTION | MB_YESNO) == IDYES) {
+                wchar_t self[MAX_PATH * 2];
+                GetModuleFileNameW(nullptr, self, (DWORD)std::size(self));
+                QuitApp(true);
+                // la nuova istanza vede la finestra gia' chiusa e parte subito
+                if (g_quitting) ShellExecuteW(nullptr, L"open", self, nullptr, nullptr, SW_SHOWNORMAL);
             }
             return 0;
         }
@@ -1190,8 +1217,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         InterlockedExchange(&g_toolBusy, 0);
         g_footRight.clear();
         UpdateStatus();
-        if (IsWindowVisible(hwnd)) MessageBoxW(hwnd, s->empty() ? L"Fatto." : s->c_str(), L"Strumenti", MB_ICONINFORMATION);
-        else ShowTrayBalloon(L"Strumenti aggiornati", L"yt-dlp / ffmpeg / Deno pronti.");
+        if (IsWindowVisible(hwnd)) MessageBoxW(hwnd, s->empty() ? TR(L"Fatto.") : s->c_str(), TR(L"Strumenti"), MB_ICONINFORMATION);
+        else ShowTrayBalloon(TR(L"Strumenti aggiornati"), TR(L"yt-dlp / ffmpeg / Deno pronti."));
         PumpQueue();
         return 0;
     }
@@ -1200,11 +1227,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         bool noFf = ResolveTool(g_set.ffmpeg, L"ffmpeg.exe").empty();
         bool noDn = ResolveTool(L"", L"deno.exe").empty();
         if (noYt || noFf) {
-            std::wstring q = L"Per funzionare servono questi componenti, che non ho trovato:\n\n";
-            if (noYt) q += L"  • yt-dlp (estrazione dei link)\n";
-            if (noFf) q += L"  • ffmpeg (unione audio/video, MP3, sottotitoli)\n";
-            if (noDn) q += L"  • Deno (necessario a yt-dlp per YouTube)\n";
-            q += L"\nScaricarli ora? Restano nella cartella di Stackly.";
+            std::wstring q = TR(L"Per funzionare servono questi componenti, che non ho trovato:\n\n");
+            if (noYt) q += TR(L"  • yt-dlp (estrazione dei link)\n");
+            if (noFf) q += TR(L"  • ffmpeg (unione audio/video, MP3, sottotitoli)\n");
+            if (noDn) q += TR(L"  • Deno (necessario a yt-dlp per YouTube)\n");
+            q += TR(L"\nScaricarli ora? Restano nella cartella di Stackly.");
             if (MessageBoxW(hwnd, q.c_str(), kAppName, MB_ICONQUESTION | MB_YESNO) == IDYES)
                 RunTool((noYt ? TT_YTDLP : 0) | (noFf ? TT_FFMPEG : 0) | (noDn ? TT_DENO : 0));
         }
@@ -1222,7 +1249,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             static bool told = false;
             if (!told) {
                 told = true;
-                ShowTrayBalloon(L"Stackly è ancora attivo", L"Continua nell'area di notifica. Clic destro sull'icona per uscire.");
+                ShowTrayBalloon(TR(L"Stackly è ancora attivo"), TR(L"Continua nell'area di notifica. Clic destro sull'icona per uscire."));
             }
             return 0;
         }
@@ -1284,8 +1311,8 @@ static bool HandleOtherInstance() {
     wchar_t self[MAX_PATH * 2];
     GetModuleFileNameW(nullptr, self, (DWORD)std::size(self));
     if (other.empty() || _wcsicmp(other.c_str(), self) == 0) { ActivateExisting(); return false; }
-    std::wstring q = L"\u00c8 gi\u00e0 aperta un'altra copia di Stackly (anche nell'area di notifica):\n\n" + other +
-                     L"\n\nChiuderla e avviare questa?\n" + self;
+    std::wstring q = TR(L"\u00c8 gi\u00e0 aperta un'altra copia di Stackly (anche nell'area di notifica):\n\n") + other +
+                     TR(L"\n\nChiuderla e avviare questa?\n") + self;
     if (MessageBoxW(nullptr, q.c_str(), kAppName, MB_ICONQUESTION | MB_YESNO | MB_SETFOREGROUND) != IDYES) {
         ActivateExisting();
         return false;
@@ -1296,7 +1323,7 @@ static bool HandleOtherInstance() {
     DWORD w = proc ? WaitForSingleObject(proc, 60000) : WAIT_FAILED;
     if (proc) CloseHandle(proc);
     if (w != WAIT_OBJECT_0) {
-        MessageBoxW(nullptr, L"L'altra copia di Stackly \u00e8 ancora aperta. Chiudila dall'area di notifica (clic destro > Esci) e riprova.",
+        MessageBoxW(nullptr, TR(L"L'altra copia di Stackly \u00e8 ancora aperta. Chiudila dall'area di notifica (clic destro > Esci) e riprova."),
                     kAppName, MB_ICONINFORMATION);
         return false;
     }
@@ -1305,6 +1332,8 @@ static bool HandleOtherInstance() {
 
 int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, LPWSTR, int show) {
     g_inst = inst;
+    InitPaths();
+    SetLanguage(std::clamp(IniInt(L"Language", 0), 0, 2));   // prima di qualsiasi messaggio
     HANDLE mutex = CreateMutexW(nullptr, TRUE, L"Local\\Stackly.SingleInstance");
     if (mutex && GetLastError() == ERROR_ALREADY_EXISTS && !HandleOtherInstance()) {
         CloseHandle(mutex);
@@ -1318,7 +1347,6 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, LPWSTR, int show) {
     ULONG_PTR gdipToken = 0;
     Gdiplus::GdiplusStartup(&gdipToken, &gsi, nullptr);
 
-    InitPaths();
     LoadSettings();
     if (FontExists(L"Segoe Fluent Icons")) g_iconFace = L"Segoe Fluent Icons";
     g_connSlots = CreateSemaphoreW(nullptr, kGlobalConnections, kGlobalConnections, nullptr);

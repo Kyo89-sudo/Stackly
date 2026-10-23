@@ -24,7 +24,10 @@
 #define IDI_SETUP   201
 
 static const wchar_t* kUninstKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Stackly";
-static const wchar_t* kTitle = L"Installazione di Stackly";
+// Lingua dell'installer: italiano se Windows e' in italiano, altrimenti inglese
+static const bool g_en = PRIMARYLANGID(GetUserDefaultUILanguage()) != LANG_ITALIAN;
+static const wchar_t* T(const wchar_t* it, const wchar_t* en) { return g_en ? en : it; }
+#define kTitle T(L"Installazione di Stackly", L"Stackly Setup")
 static HINSTANCE g_inst;
 static HWND g_path, g_browse, g_desk, g_start, g_launch, g_ok, g_cancel, g_lbl, g_note;
 static HFONT g_font, g_big, g_small;
@@ -74,7 +77,7 @@ static bool CloseRunningApp(HWND owner, bool silent) {
         HWND h = FindWindowW(L"StacklyMainWnd", nullptr);
         if (!h) return true;
         if (!silent && attempt == 0 &&
-            MessageBoxW(owner, L"Stackly \u00e8 aperto. Chiuderlo per continuare?", kTitle, MB_ICONQUESTION | MB_OKCANCEL) != IDOK)
+            MessageBoxW(owner, T(L"Stackly \u00e8 aperto. Chiuderlo per continuare?", L"Stackly is running. Close it to continue?"), kTitle, MB_ICONQUESTION | MB_OKCANCEL) != IDOK)
             return false;
         DWORD pid = 0;
         GetWindowThreadProcessId(h, &pid);
@@ -88,7 +91,7 @@ static bool CloseRunningApp(HWND owner, bool silent) {
             Sleep(2000);
         }
     }
-    if (!silent) MessageBoxW(owner, L"Chiudi Stackly (anche dall'area di notifica) e riprova.", kTitle, MB_ICONWARNING);
+    if (!silent) MessageBoxW(owner, T(L"Chiudi Stackly (anche dall'area di notifica) e riprova.", L"Close Stackly (including from the notification area) and try again."), kTitle, MB_ICONWARNING);
     return FindWindowW(L"StacklyMainWnd", nullptr) == nullptr;
 }
 
@@ -114,17 +117,17 @@ static bool WritePayload(const std::wstring& dest, std::wstring& err) {
     HGLOBAL g = r ? LoadResource(g_inst, r) : nullptr;
     const void* data = g ? LockResource(g) : nullptr;
     DWORD size = r ? SizeofResource(g_inst, r) : 0;
-    if (!data || !size) { err = L"pacchetto interno mancante"; return false; }
+    if (!data || !size) { err = T(L"pacchetto interno mancante", L"embedded package missing"); return false; }
     std::wstring tmp = dest + L".new";
     HANDLE f = CreateFileW(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) { err = L"impossibile scrivere " + tmp; return false; }
+    if (f == INVALID_HANDLE_VALUE) { err = T(L"impossibile scrivere ", L"cannot write ") + tmp; return false; }
     DWORD w = 0;
     BOOL ok = WriteFile(f, data, size, &w, nullptr) && w == size;
     FlushFileBuffers(f);
     CloseHandle(f);
     if (!ok || !MoveFileExW(tmp.c_str(), dest.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
         DeleteFileW(tmp.c_str());
-        err = L"impossibile scrivere " + dest;
+        err = T(L"impossibile scrivere ", L"cannot write ") + dest;
         return false;
     }
     return true;
@@ -152,21 +155,21 @@ static void RegDw(HKEY k, const wchar_t* name, DWORD v) {
 
 static bool DoInstall(const std::wstring& dirIn, bool desk, bool start, std::wstring& err) {
     std::wstring dir = Trim(dirIn);
-    if (dir.empty()) { err = L"cartella non valida"; return false; }
+    if (dir.empty()) { err = T(L"cartella non valida", L"invalid folder"); return false; }
     int rc = SHCreateDirectoryExW(nullptr, dir.c_str(), nullptr);
-    if (rc != ERROR_SUCCESS && rc != ERROR_ALREADY_EXISTS && rc != ERROR_FILE_EXISTS) { err = L"impossibile creare " + dir; return false; }
+    if (rc != ERROR_SUCCESS && rc != ERROR_ALREADY_EXISTS && rc != ERROR_FILE_EXISTS) { err = T(L"impossibile creare ", L"cannot create ") + dir; return false; }
     std::wstring exe = dir + L"\\Stackly.exe";
     std::wstring uninst = dir + L"\\uninstall.exe";
     if (!WritePayload(exe, err)) return false;
     std::wstring self = SelfPath();
     if (_wcsicmp(self.c_str(), uninst.c_str()) != 0 && !CopyFileW(self.c_str(), uninst.c_str(), FALSE)) {
-        err = L"impossibile copiare il disinstallatore";
+        err = T(L"impossibile copiare il disinstallatore", L"cannot copy the uninstaller");
         return false;
     }
     std::wstring programs = KnownFolder(FOLDERID_Programs);
-    if (start && !programs.empty()) MakeShortcut(programs + L"\\Stackly.lnk", exe, dir, L"Scarica video e audio con yt-dlp");
+    if (start && !programs.empty()) MakeShortcut(programs + L"\\Stackly.lnk", exe, dir, T(L"Scarica video e audio con yt-dlp", L"Download video and audio with yt-dlp"));
     std::wstring desktop = KnownFolder(FOLDERID_Desktop);
-    if (desk && !desktop.empty()) MakeShortcut(desktop + L"\\Stackly.lnk", exe, dir, L"Scarica video e audio con yt-dlp");
+    if (desk && !desktop.empty()) MakeShortcut(desktop + L"\\Stackly.lnk", exe, dir, T(L"Scarica video e audio con yt-dlp", L"Download video and audio with yt-dlp"));
     else if (!desktop.empty()) DeleteFileW((desktop + L"\\Stackly.lnk").c_str());
 
     HKEY k;
@@ -208,11 +211,11 @@ static int Uninstall(bool silent) {
         tc.hInstance = g_inst;
         tc.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW;
         tc.dwCommonButtons = TDCBF_YES_BUTTON | TDCBF_NO_BUTTON;
-        tc.pszWindowTitle = L"Disinstalla Stackly";
+        tc.pszWindowTitle = T(L"Disinstalla Stackly", L"Uninstall Stackly");
         tc.pszMainIcon = TD_WARNING_ICON;
-        tc.pszMainInstruction = L"Disinstallare Stackly?";
-        tc.pszContent = L"I file che hai scaricato non vengono toccati.";
-        tc.pszVerificationText = L"Elimina anche impostazioni e componenti scaricati (yt-dlp, ffmpeg, Deno)";
+        tc.pszMainInstruction = T(L"Disinstallare Stackly?", L"Uninstall Stackly?");
+        tc.pszContent = T(L"I file che hai scaricato non vengono toccati.", L"The files you downloaded are not touched.");
+        tc.pszVerificationText = T(L"Elimina anche impostazioni e componenti scaricati (yt-dlp, ffmpeg, Deno)", L"Also delete settings and downloaded components (yt-dlp, ffmpeg, Deno)");
         tc.nDefaultButton = IDNO;
         int btn = 0;
         if (FAILED(TaskDialogIndirect(&tc, &btn, nullptr, &purge)) || btn != IDYES) return 1;
@@ -247,7 +250,7 @@ static int Uninstall(bool silent) {
             CloseHandle(pi.hProcess);
         }
     }
-    if (!silent) MessageBoxW(nullptr, L"Stackly \u00e8 stato disinstallato.", L"Disinstalla Stackly", MB_ICONINFORMATION);
+    if (!silent) MessageBoxW(nullptr, T(L"Stackly \u00e8 stato disinstallato.", L"Stackly has been uninstalled."), T(L"Disinstalla Stackly", L"Uninstall Stackly"), MB_ICONINFORMATION);
     return 0;
 }
 
@@ -320,7 +323,7 @@ static void PaintHeader(HDC dc, const RECT& rc) {
     DrawTextW(dc, L"Stackly", -1, &t, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
     SelectObject(dc, g_font);
     RECT t2{ S(96), S(50), rc.right - S(20), S(76) };
-    std::wstring sub = std::wstring(L"Installazione della versione ") + STACKLY_VERSION_W;
+    std::wstring sub = std::wstring(T(L"Installazione della versione ", L"Installing version ")) + STACKLY_VERSION_W;
     DrawTextW(dc, sub.c_str(), -1, &t2, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
     SelectObject(dc, old);
 }
@@ -333,17 +336,19 @@ static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             SendMessageW(c, WM_SETFONT, (WPARAM)g_font, FALSE);
             return c;
         };
-        g_lbl = mk(WC_STATICW, L"Cartella di installazione:", 0, 0);
+        g_lbl = mk(WC_STATICW, T(L"Cartella di installazione:", L"Install folder:"), 0, 0);
         g_path = mk(WC_EDITW, DefaultDir().c_str(), WS_TABSTOP | ES_AUTOHSCROLL, ID_PATH, WS_EX_CLIENTEDGE);
-        g_browse = mk(WC_BUTTONW, L"Sfoglia...", WS_TABSTOP, ID_BROWSE);
-        g_start = mk(WC_BUTTONW, L"Collegamento nel menu Start", WS_TABSTOP | BS_AUTOCHECKBOX, ID_START);
-        g_desk = mk(WC_BUTTONW, L"Collegamento sul desktop", WS_TABSTOP | BS_AUTOCHECKBOX, ID_DESK);
-        g_launch = mk(WC_BUTTONW, L"Avvia Stackly al termine", WS_TABSTOP | BS_AUTOCHECKBOX, ID_LAUNCH);
-        g_note = mk(WC_STATICW, L"Installazione solo per il tuo utente: non servono permessi di amministratore. "
-                                L"Al primo avvio Stackly scarica i componenti necessari (yt-dlp, ffmpeg, Deno).", 0, 0);
+        g_browse = mk(WC_BUTTONW, T(L"Sfoglia...", L"Browse..."), WS_TABSTOP, ID_BROWSE);
+        g_start = mk(WC_BUTTONW, T(L"Collegamento nel menu Start", L"Start menu shortcut"), WS_TABSTOP | BS_AUTOCHECKBOX, ID_START);
+        g_desk = mk(WC_BUTTONW, T(L"Collegamento sul desktop", L"Desktop shortcut"), WS_TABSTOP | BS_AUTOCHECKBOX, ID_DESK);
+        g_launch = mk(WC_BUTTONW, T(L"Avvia Stackly al termine", L"Launch Stackly when done"), WS_TABSTOP | BS_AUTOCHECKBOX, ID_LAUNCH);
+        g_note = mk(WC_STATICW, T(L"Installazione solo per il tuo utente: non servono permessi di amministratore. "
+                                  L"Al primo avvio Stackly scarica i componenti necessari (yt-dlp, ffmpeg, Deno).",
+                                  L"Installs for your user only: no administrator rights needed. "
+                                  L"On first launch Stackly downloads the components it needs (yt-dlp, ffmpeg, Deno)."), 0, 0);
         SendMessageW(g_note, WM_SETFONT, (WPARAM)g_small, FALSE);
-        g_cancel = mk(WC_BUTTONW, L"Annulla", WS_TABSTOP, ID_CANCEL);
-        g_ok = mk(WC_BUTTONW, L"Installa", WS_TABSTOP | BS_DEFPUSHBUTTON, ID_INSTALL);
+        g_cancel = mk(WC_BUTTONW, T(L"Annulla", L"Cancel"), WS_TABSTOP, ID_CANCEL);
+        g_ok = mk(WC_BUTTONW, T(L"Installa", L"Install"), WS_TABSTOP | BS_DEFPUSHBUTTON, ID_INSTALL);
         for (HWND c : { g_start, g_desk, g_launch }) SendMessageW(c, BM_SETCHECK, BST_CHECKED, 0);
         Layout(h);
         return 0;
@@ -375,13 +380,13 @@ static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                                 SendMessageW(g_start, BM_GETCHECK, 0, 0) == BST_CHECKED, err);
             EnableWindow(g_ok, TRUE);
             if (!ok) {
-                MessageBoxW(h, (L"Installazione non riuscita: " + err).c_str(), kTitle, MB_ICONERROR);
+                MessageBoxW(h, (T(L"Installazione non riuscita: ", L"Installation failed: ") + err).c_str(), kTitle, MB_ICONERROR);
                 return 0;
             }
             if (SendMessageW(g_launch, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 ShellExecuteW(nullptr, L"open", (dir + L"\\Stackly.exe").c_str(), nullptr, dir.c_str(), SW_SHOWNORMAL);
             else
-                MessageBoxW(h, L"Stackly \u00e8 stato installato.", kTitle, MB_ICONINFORMATION);
+                MessageBoxW(h, T(L"Stackly \u00e8 stato installato.", L"Stackly has been installed."), kTitle, MB_ICONINFORMATION);
             DestroyWindow(h);
             return 0;
         }

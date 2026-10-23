@@ -66,13 +66,13 @@ inline HINTERNET OpenSession(const std::wstring& ua, bool h2 = true, int maxConn
 
 inline std::wstring ErrText(DWORD e) {
     switch (e) {
-    case ERROR_WINHTTP_TIMEOUT: return L"timeout di rete";
-    case ERROR_WINHTTP_NAME_NOT_RESOLVED: return L"server non trovato";
-    case ERROR_WINHTTP_CANNOT_CONNECT: return L"connessione rifiutata";
-    case ERROR_WINHTTP_CONNECTION_ERROR: return L"connessione interrotta";
-    case ERROR_WINHTTP_SECURE_FAILURE: return L"errore TLS/certificato";
-    case ERROR_WINHTTP_OPERATION_CANCELLED: return L"annullato";
-    default: return L"errore di rete " + std::to_wstring(e);
+    case ERROR_WINHTTP_TIMEOUT: return TR(L"timeout di rete");
+    case ERROR_WINHTTP_NAME_NOT_RESOLVED: return TR(L"server non trovato");
+    case ERROR_WINHTTP_CANNOT_CONNECT: return TR(L"connessione rifiutata");
+    case ERROR_WINHTTP_CONNECTION_ERROR: return TR(L"connessione interrotta");
+    case ERROR_WINHTTP_SECURE_FAILURE: return TR(L"errore TLS/certificato");
+    case ERROR_WINHTTP_OPERATION_CANCELLED: return TR(L"annullato");
+    default: return TR(L"errore di rete ") + std::to_wstring(e);
     }
 }
 
@@ -151,9 +151,9 @@ inline std::wstring QueryHeader(HINTERNET r, DWORD what) {
 // Scopre dimensione e supporto ai Range con una richiesta "bytes=0-0".
 inline bool Probe(Job& j, std::wstring& err) {
     Url u;
-    if (!Crack(j.url, u)) { err = L"URL non valido"; return false; }
+    if (!Crack(j.url, u)) { err = TR(L"URL non valido"); return false; }
     HINTERNET s = OpenSession(j.ua);
-    if (!s) { err = L"WinHTTP non disponibile"; return false; }
+    if (!s) { err = TR(L"WinHTTP non disponibile"); return false; }
     HINTERNET c = WinHttpConnect(s, u.host.c_str(), u.port, 0);
     bool ok = false;
     if (c) {
@@ -203,16 +203,16 @@ inline void WaitOrCancel(const Job& j, DWORD ms) {
 // Scarica tutto il file (segmentato se il server supporta i Range).
 inline bool Download(Job& j, std::wstring& err) {
     Url u;
-    if (!Crack(j.url, u)) { err = L"URL non valido"; return false; }
+    if (!Crack(j.url, u)) { err = TR(L"URL non valido"); return false; }
     const bool segmented = j.ranges && j.size > 0;
     HINTERNET ses = segmented ? OpenSession(j.ua, false, std::clamp(j.connections, 1, 32) + 2) : OpenSession(j.ua);
-    if (!ses) { err = L"WinHTTP non disponibile"; return false; }
+    if (!ses) { err = TR(L"WinHTTP non disponibile"); return false; }
 
     // --- Server senza Range: una sola connessione, scrittura sequenziale ---
     if (!segmented) {
         HANDLE f = CreateFileW(j.outPath.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
                                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
-        if (f == INVALID_HANDLE_VALUE) { WinHttpCloseHandle(ses); err = L"impossibile creare il file"; return false; }
+        if (f == INVALID_HANDLE_VALUE) { WinHttpCloseHandle(ses); err = TR(L"impossibile creare il file"); return false; }
         bool ok = false;
         HINTERNET c = WinHttpConnect(ses, u.host.c_str(), u.port, 0);
         if (c) {
@@ -226,12 +226,12 @@ inline bool Download(Job& j, std::wstring& err) {
                 while (!j.cancelled()) {
                     if (!WinHttpReadData(r, buf.data(), (DWORD)buf.size(), &n)) { ok = false; err = ErrText(GetLastError()); break; }
                     if (!n) break;
-                    if (!WriteAt(f, off, buf.data(), n)) { ok = false; err = L"errore di scrittura su disco"; break; }
+                    if (!WriteAt(f, off, buf.data(), n)) { ok = false; err = TR(L"errore di scrittura su disco"); break; }
                     off += n;
                     if (j.done) *j.done += n;
                 }
-                if (j.cancelled()) { ok = false; err = L"annullato"; }
-                else if (ok && j.size > 0 && off != j.size) { ok = false; err = L"download incompleto (connessione chiusa)"; }
+                if (j.cancelled()) { ok = false; err = TR(L"annullato"); }
+                else if (ok && j.size > 0 && off != j.size) { ok = false; err = TR(L"download incompleto (connessione chiusa)"); }
             } else {
                 err = r ? L"HTTP " + std::to_wstring(status) : ErrText(e);
             }
@@ -269,7 +269,7 @@ inline bool Download(Job& j, std::wstring& err) {
 
     HANDLE out = CreateFileW(j.outPath.c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                              resume ? OPEN_EXISTING : CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (out == INVALID_HANDLE_VALUE) { WinHttpCloseHandle(ses); err = L"impossibile creare il file"; return false; }
+    if (out == INVALID_HANDLE_VALUE) { WinHttpCloseHandle(ses); err = TR(L"impossibile creare il file"); return false; }
     // File sparse: le scritture fuori ordine dei segmenti non costringono NTFS a riempire
     // di zeri tutto lo spazio precedente (causa tipica di blocchi su file grandi).
     DWORD br = 0;
@@ -341,7 +341,7 @@ inline bool Download(Job& j, std::wstring& err) {
                     std::wstring cr = QueryHeader(r, WINHTTP_QUERY_CONTENT_RANGE);
                     std::wstring want = L"bytes " + std::to_wstring(from) + L"-";
                     if (!cr.empty() && cr.compare(0, want.size(), want) != 0) {
-                        lastErr = L"il server ha restituito un intervallo diverso";
+                        lastErr = TR(L"il server ha restituito un intervallo diverso");
                         Close(j, r);
                         continue;
                     }
@@ -353,7 +353,7 @@ inline bool Download(Job& j, std::wstring& err) {
                     if (!WinHttpReadData(r, buf.data(), (DWORD)buf.size(), &n)) { rdOk = false; lastErr = ErrText(GetLastError()); break; }
                     if (!n) break;
                     DWORD take = (DWORD)std::min<int64_t>(n, to - off + 1);
-                    if (!WriteAt(f, off, buf.data(), take)) { rdOk = false; lastErr = L"errore di scrittura su disco"; break; }
+                    if (!WriteAt(f, off, buf.data(), take)) { rdOk = false; lastErr = TR(L"errore di scrittura su disco"); break; }
                     off += take;
                     counted += take;
                     if (j.done) *j.done += take;
@@ -362,7 +362,7 @@ inline bool Download(Job& j, std::wstring& err) {
                 ok = rdOk && off == to + 1;
                 if (!ok) {
                     if (j.done) *j.done -= counted;
-                    if (rdOk && lastErr.empty()) lastErr = L"connessione chiusa prima della fine del blocco";
+                    if (rdOk && lastErr.empty()) lastErr = TR(L"connessione chiusa prima della fine del blocco");
                 }
             }
             if (!ok) {
@@ -392,7 +392,7 @@ inline bool Download(Job& j, std::wstring& err) {
     if (threads.empty()) {
         if (map != INVALID_HANDLE_VALUE) CloseHandle(map);
         WinHttpCloseHandle(ses);
-        err = L"impossibile avviare i thread di download";
+        err = TR(L"impossibile avviare i thread di download");
         return false;
     }
     for (auto& t : threads) t.join();
@@ -401,8 +401,8 @@ inline bool Download(Job& j, std::wstring& err) {
     WinHttpCloseHandle(ses);
 
     bool all = std::all_of(doneMap.begin(), doneMap.end(), [](char v) { return v != 0; });
-    if (j.cancelled()) { err = L"annullato"; return false; }
-    if (!all) { err = firstErr.empty() ? L"download incompleto" : firstErr; return false; }
+    if (j.cancelled()) { err = TR(L"annullato"); return false; }
+    if (!all) { err = firstErr.empty() ? TR(L"download incompleto") : firstErr; return false; }
     DeleteFileW(mapPath.c_str());
     // File completo: toglie l'attributo sparse (nessun buco rimasto)
     HANDLE fin = CreateFileW(j.outPath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);

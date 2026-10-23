@@ -449,8 +449,8 @@ static CardGeo Geo(const RECT& rc) {
 // Etichetta coerente "Tipo · dettagli" (coda e profilo)
 static std::wstring ShortQuality(const Preset& p) {
     if (p.height > 0) return std::to_wstring(p.height) + L"p";
-    if (p.vq == kAskQuality) return L"Chiedi";
-    std::wstring q = kVideoQ[p.vq].value;
+    if (p.vq == kAskQuality) return TR(L"Chiedi");
+    std::wstring q = kVideoQ[p.vq].value();
     if (size_t sp = q.find(L" ("); sp != std::wstring::npos) q.resize(sp);
     return q;
 }
@@ -459,18 +459,18 @@ static std::wstring PresetLabel(const Preset& p, int container, bool subs = fals
     const wchar_t* dot = L" \u00b7 ";
     switch (p.kind) {
     case DK_AUDIO: {
-        std::wstring s = std::wstring(L"Solo audio") + dot + kAudioFmts[p.afmt].value;
-        if (p.afmt != 2) s += dot + std::wstring(kAudioQ[p.aq].value);
+        std::wstring s = std::wstring(TR(L"Solo audio")) + dot + kAudioFmts[p.afmt].value();
+        if (p.afmt != 2) s += dot + std::wstring(kAudioQ[p.aq].value());
         return s;
     }
     case DK_SUBS:
-        return std::wstring(L"Solo sottotitoli") + dot + kSubFmts[p.subfmt].value;
+        return std::wstring(TR(L"Solo sottotitoli")) + dot + kSubFmts[p.subfmt].value();
     case DK_MANUAL:
-        return L"Scegli ogni volta";
+        return TR(L"Scegli ogni volta");
     case DK_VIDEOONLY:
-        return std::wstring(L"Solo video") + dot + ShortQuality(p) + dot + kContainers[container].value;
+        return std::wstring(TR(L"Solo video")) + dot + ShortQuality(p) + dot + kContainers[container].value();
     default:
-        return std::wstring(L"Video + audio") + dot + ShortQuality(p) + dot + kContainers[container].value +
+        return std::wstring(TR(L"Video + audio")) + dot + ShortQuality(p) + dot + kContainers[container].value() +
                (subs ? std::wstring(dot) + L"Sub" : L"");
     }
 }
@@ -493,13 +493,13 @@ static void DrawCard(HDC target, const RECT& itemRc, const Item& it, bool select
     std::wstring stText;
     wchar_t action = G_CANCEL;
     switch (it.st) {
-    case St::Queued:      stText = L"In coda"; break;
-    case St::Starting:    stText = L"Avvio..."; break;
-    case St::Downloading: stText = it.pct.empty() ? L"Download..." : it.pct; stColor = P.text; break;
-    case St::Processing:  stText = L"Creazione file..."; stColor = P.text; break;
-    case St::Done:        stText = L"Completato"; stColor = P.green; action = G_OPENFOLDER; break;
-    case St::Error:       stText = L"Errore"; stColor = P.red; action = G_REFRESH; break;
-    case St::Cancelled:   stText = L"Annullato"; action = G_REFRESH; break;
+    case St::Queued:      stText = TR(L"In coda"); break;
+    case St::Starting:    stText = TR(L"Avvio..."); break;
+    case St::Downloading: stText = it.pct.empty() ? TR(L"Download...") : it.pct; stColor = P.text; break;
+    case St::Processing:  stText = TR(L"Creazione file..."); stColor = P.text; break;
+    case St::Done:        stText = TR(L"Completato"); stColor = P.green; action = G_OPENFOLDER; break;
+    case St::Error:       stText = TR(L"Errore"); stColor = P.red; action = G_REFRESH; break;
+    case St::Cancelled:   stText = TR(L"Annullato"); action = G_REFRESH; break;
     }
 
     {
@@ -583,8 +583,8 @@ static void DrawCard(HDC target, const RECT& itemRc, const Item& it, bool select
         add(it.size);
         if (it.st == St::Downloading) {
             add(it.speed);
-            if (!it.eta.empty()) add(L"mancano " + it.eta);
-            if (it.usingNative) add(L"multi-connessione");
+            if (!it.eta.empty()) add(TR(L"mancano ") + it.eta);
+            if (it.usingNative) add(TR(L"multi-connessione"));
         }
         if (it.st == St::Done && !it.filePath.empty()) add(it.filePath.substr(it.filePath.find_last_of(L'\\') + 1));
     }

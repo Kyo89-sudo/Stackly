@@ -334,7 +334,7 @@ static bool StartYtdlp(Item& it) {
     std::wstring ytdlp = ResolveTool(g_set.ytdlp, L"yt-dlp.exe");
     if (ytdlp.empty()) {
         it.st = St::Error;
-        it.err = L"yt-dlp.exe non trovato (menu ⋯ > Aggiorna / scarica yt-dlp)";
+        it.err = TR(L"yt-dlp.exe non trovato (menu ⋯ > Aggiorna / scarica yt-dlp)");
         return false;
     }
     SHCreateDirectoryExW(nullptr, it.folder.c_str(), nullptr);
@@ -342,7 +342,7 @@ static bool StartYtdlp(Item& it) {
     std::wstring e;
     if (!Spawn(ytdlp, BuildYtdlpArgs(it), it.folder, nullptr, sp, e)) {
         it.st = St::Error;
-        it.err = L"avvio yt-dlp fallito: " + e;
+        it.err = TR(L"avvio yt-dlp fallito: ") + e;
         return false;
     }
     HANDLE procDup = nullptr;
@@ -358,7 +358,7 @@ static bool StartYtdlp(Item& it) {
         CloseHandle(procDup);
         if (sp.job) TerminateJobObject(sp.job, 1); else TerminateProcess(sp.proc, 1);
         it.st = St::Error;
-        it.err = L"impossibile creare il thread di lettura";
+        it.err = TR(L"impossibile creare il thread di lettura");
         return false;
     }
     return true;
@@ -575,8 +575,8 @@ static DWORD WINAPI NativeProc(LPVOID p) {
             // Se si era gia' scaricato qualcosa (almeno ~8 MB in questa sessione) i blocchi completati si
             // conservano: "Riprova" estrae link nuovi e riprende da li'. Altrimenti si passa a yt-dlp.
             if (done.load() - resumed.load() >= (8ll << 20)) {
-                NativeLine(c, L"ERROR: " + (e.empty() ? std::wstring(L"download interrotto") : e) +
-                                  L" \u2014 premi Riprova per riprendere da dove era");
+                NativeLine(c, L"ERROR: " + (e.empty() ? std::wstring(TR(L"download interrotto")) : e) +
+                                  TR(L" \u2014 premi Riprova per riprendere da dove era"));
                 return finish(WM_APP_DONE, 1);
             }
             for (auto& x : streams) { DeleteFileW(x.part.c_str()); DeleteFileW((x.part + L".stkp").c_str()); }
@@ -630,7 +630,7 @@ static DWORD WINAPI NativeProc(LPVOID p) {
     if (c.cancel) { DeleteFileW(finalPath.c_str()); return finish(WM_APP_DONE, 1); }
     if (!ok) {
         DeleteFileW(finalPath.c_str());
-        NativeLine(c, L"ERROR: unione/conversione con ffmpeg non riuscita");
+        NativeLine(c, std::wstring(L"ERROR: ") + TR(L"unione/conversione con ffmpeg non riuscita"));
         return finish(WM_APP_DONE, 1);
     }
     NativeLine(c, L"[SKF]" + finalPath);
@@ -679,7 +679,7 @@ static bool StartItem(Item& it) {
     it.st = St::Starting;
     if (ResolveTool(g_set.ytdlp, L"yt-dlp.exe").empty()) {
         it.st = St::Error;
-        it.err = L"yt-dlp.exe non trovato (menu ⋯ > Aggiorna / scarica yt-dlp)";
+        it.err = TR(L"yt-dlp.exe non trovato (menu ⋯ > Aggiorna / scarica yt-dlp)");
         return false;
     }
     if (NativeEligible(it) && StartNative(it)) return true;
@@ -784,7 +784,7 @@ static void OnDone(int id, DWORD code) {
         it->st = St::Cancelled;
     } else if (code == 0 && ItemOnlySubs(*it) && it->subsWritten == 0) {
         it->st = St::Error;
-        it->err = L"nessun sottotitolo disponibile nelle lingue scelte (" + g_set.subLangs + L")";
+        it->err = TR(L"nessun sottotitolo disponibile nelle lingue scelte (") + g_set.subLangs + L")";
     } else if (code == 0) {
         it->st = St::Done;
         if (ItemOnlySubs(*it) && !it->filePath.empty() && !FileExists(it->filePath)) {
@@ -794,10 +794,10 @@ static void OnDone(int id, DWORD code) {
         it->pct = L"100%";
         it->pctValue = 100;
         if (!IsWindowVisible(g_hwnd) || IsIconic(g_hwnd))
-            ShowTrayBalloon(L"Download completato", it->title.empty() ? it->url : it->title);
+            ShowTrayBalloon(TR(L"Download completato"), it->title.empty() ? it->url : it->title);
     } else {
         it->st = St::Error;
-        if (it->err.empty()) it->err = L"yt-dlp terminato con codice " + std::to_wstring((int)code);
+        if (it->err.empty()) it->err = TR(L"yt-dlp terminato con codice ") + std::to_wstring((int)code);
     }
     it->speed.clear();
     it->eta.clear();
@@ -841,7 +841,7 @@ static bool DownloadTo(const wchar_t* url, const std::wstring& dest, std::wstrin
     j.cancel = &cancel;
     j.connections = 8;
     if (!net::Probe(j, err) || !net::Download(j, err) || !FileExists(dest)) {
-        err = L"download fallito (" + err + L"): " + url;
+        err = TR(L"download fallito (") + err + L"): " + url;
         DeleteFileW(dest.c_str());
         return false;
     }
@@ -889,7 +889,7 @@ static bool FetchZipTools(const wchar_t* url, const wchar_t* tag, std::initializ
     GetSystemDirectoryW(sys, MAX_PATH);
     std::wstring tar = std::wstring(sys) + L"\\tar.exe";
     if (!FileExists(tar)) {
-        msg += L"tar.exe non trovato (serve Windows 10 1803 o successivo). Archivio scaricato in:\n" + zip + L"\n";
+        msg += TR(L"tar.exe non trovato (serve Windows 10 1803 o successivo). Archivio scaricato in:\n") + zip + L"\n";
         return false;
     }
     std::string out;
@@ -898,10 +898,10 @@ static bool FetchZipTools(const wchar_t* url, const wchar_t* tag, std::initializ
     bool ok = true;
     for (const wchar_t* f : files) {
         std::wstring src = FindFileRec(work, f);
-        if (src.empty()) { msg += std::wstring(f) + L" non trovato nell'archivio.\n"; ok = false; continue; }
+        if (src.empty()) { msg += std::wstring(f) + TR(L" non trovato nell'archivio.\n"); ok = false; continue; }
         std::wstring dst = BinDir() + f;
         if (!CopyFileW(src.c_str(), dst.c_str(), FALSE)) {
-            msg += std::wstring(L"Copia di ") + f + L" fallita: " + Win32Err(GetLastError()) + L"\n";
+            msg += std::wstring(TR(L"Copia di ")) + f + TR(L" fallita: ") + Win32Err(GetLastError()) + L"\n";
             ok = false;
         }
     }
@@ -922,7 +922,7 @@ static DWORD WINAPI ToolProc(LPVOID p) {
     if (tasks & TT_YTDLP) {
         const std::wstring& cur = ta->ytdlp;
         if (!cur.empty()) {
-            PostStr(WM_APP_TOOLSTATUS, 0, L"Aggiornamento di yt-dlp...");
+            PostStr(WM_APP_TOOLSTATUS, 0, TR(L"Aggiornamento di yt-dlp..."));
             std::string out;
             DWORD rc = 1;
             if (RunCaptureEx(cur, L"-U", out, nullptr, rc)) {
@@ -930,24 +930,24 @@ static DWORD WINAPI ToolProc(LPVOID p) {
                 if (o.size() > 1500) o = L"..." + o.substr(o.size() - 1500);
                 msg += L"yt-dlp:\n" + o + L"\n\n";
             } else {
-                msg += L"Impossibile eseguire " + cur + L"\n\n";
+                msg += TR(L"Impossibile eseguire ") + cur + L"\n\n";
             }
         } else {
-            PostStr(WM_APP_TOOLSTATUS, 0, L"Download di yt-dlp...");
+            PostStr(WM_APP_TOOLSTATUS, 0, TR(L"Download di yt-dlp..."));
             std::wstring dst = BinDir() + L"yt-dlp.exe", part = dst + L".part", err;
             if (DownloadTo(kUrlYtdlp, part, err) && MoveFileExW(part.c_str(), dst.c_str(), MOVEFILE_REPLACE_EXISTING))
-                msg += L"yt-dlp installato.\n\n";
+                msg += TR(L"yt-dlp installato.\n\n");
             else
                 msg += L"yt-dlp: " + (err.empty() ? Win32Err(GetLastError()) : err) + L"\n\n";
         }
     }
     if (tasks & TT_FFMPEG) {
-        PostStr(WM_APP_TOOLSTATUS, 0, L"Download di ffmpeg (circa 100 MB)...");
-        if (FetchZipTools(kUrlFfmpeg, L"ffmpeg", { L"ffmpeg.exe", L"ffprobe.exe" }, msg)) msg += L"ffmpeg installato.\n\n";
+        PostStr(WM_APP_TOOLSTATUS, 0, TR(L"Download di ffmpeg (circa 100 MB)..."));
+        if (FetchZipTools(kUrlFfmpeg, L"ffmpeg", { L"ffmpeg.exe", L"ffprobe.exe" }, msg)) msg += TR(L"ffmpeg installato.\n\n");
     }
     if (tasks & TT_DENO) {
-        PostStr(WM_APP_TOOLSTATUS, 0, L"Download di Deno...");
-        if (FetchZipTools(kUrlDeno, L"deno", { L"deno.exe" }, msg)) msg += L"Deno installato.\n\n";
+        PostStr(WM_APP_TOOLSTATUS, 0, TR(L"Download di Deno..."));
+        if (FetchZipTools(kUrlDeno, L"deno", { L"deno.exe" }, msg)) msg += TR(L"Deno installato.\n\n");
     }
     if (SUCCEEDED(hr)) CoUninitialize();
     PostStrRetry(WM_APP_TOOLDONE, 0, Trim(msg));
@@ -957,13 +957,13 @@ static DWORD WINAPI ToolProc(LPVOID p) {
 static void RunTool(int tasks) {
     for (auto& p : g_items) {
         if (IsActive(*p)) {
-            MessageBoxW(g_hwnd, L"Attendi la fine dei download in corso (o annullali) prima di aggiornare gli strumenti.",
+            MessageBoxW(g_hwnd, TR(L"Attendi la fine dei download in corso (o annullali) prima di aggiornare gli strumenti."),
                         kAppName, MB_ICONINFORMATION);
             return;
         }
     }
     if (InterlockedCompareExchange(&g_toolBusy, 1, 0) != 0) {
-        MessageBoxW(g_hwnd, L"Un aggiornamento è già in corso.", kAppName, MB_ICONINFORMATION);
+        MessageBoxW(g_hwnd, TR(L"Un aggiornamento è già in corso."), kAppName, MB_ICONINFORMATION);
         return;
     }
     auto* ta = new ToolArgs{ tasks, ResolveTool(g_set.ytdlp, L"yt-dlp.exe") };
@@ -985,7 +985,7 @@ struct AnalyzeResult {
 static void CALLBACK AnalyzeWork(PTP_CALLBACK_INSTANCE, void* p) {
     std::unique_ptr<AnalyzeResult> r(static_cast<AnalyzeResult*>(p));
     if (r->ytdlp.empty()) {
-        r->err = L"yt-dlp.exe non trovato (menu \u22ef > Aggiorna / scarica yt-dlp)";
+        r->err = TR(L"yt-dlp.exe non trovato (menu \u22ef > Aggiorna / scarica yt-dlp)");
     } else {
         std::string errText;
         DWORD code = 1;
@@ -993,7 +993,7 @@ static void CALLBACK AnalyzeWork(PTP_CALLBACK_INSTANCE, void* p) {
                      r->json, &errText, code);
         if (code != 0 || r->json.empty()) {
             r->err = LastError(errText);
-            if (r->err.empty()) r->err = L"analisi non riuscita (codice " + std::to_wstring((int)code) + L")";
+            if (r->err.empty()) r->err = TR(L"analisi non riuscita (codice ") + std::to_wstring((int)code) + L")";
             r->json.clear();
         }
     }
@@ -1007,7 +1007,7 @@ static void StartNextAnalysis() {
     g_analyzeQueue.pop_front();
     if (!TrySubmitThreadpoolCallback(AnalyzeWork, r, nullptr)) { delete r; return; }
     g_analyzing = true;
-    g_footRight = L"Analisi dei formati disponibili...";
+    g_footRight = TR(L"Analisi dei formati disponibili...");
     EnableWindow(g_bFormats, FALSE);
     UpdateStatus();
 }

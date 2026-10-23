@@ -34,6 +34,7 @@ namespace Gdiplus { using std::min; using std::max; }
 
 #include "resource.h"
 #include "json.h"
+#include "lang.h"
 #include "net.h"
 
 #ifdef _MSC_VER
@@ -80,24 +81,30 @@ enum class St { Queued, Starting, Downloading, Processing, Done, Error, Cancelle
 // Cosa scaricare (i valori restano quelli salvati nelle versioni precedenti: 0, 1, 2)
 enum DlKind { DK_VIDEO = 0, DK_AUDIO = 1, DK_MANUAL = 2, DK_VIDEOONLY = 3, DK_SUBS = 4 };
 
+// N_() marca un testo da tradurre senza tradurlo subito (tabelle costanti create prima di sapere la lingua)
+#define N_(s) s
+
 struct Choice {
-    const wchar_t* label;   // testo nel menu
-    const wchar_t* value;   // testo mostrato nel campo
-    const wchar_t* hint;    // spiegazione breve (menu)
+    const wchar_t* label_;   // testo nel menu
+    const wchar_t* value_;   // testo mostrato nel campo
+    const wchar_t* hint_;    // spiegazione breve (menu)
+    const wchar_t* label() const { return TR(label_); }
+    const wchar_t* value() const { return TR(value_); }
+    const wchar_t* hint() const { return TR(hint_); }
 };
 
 // Indicizzato per DlKind; l'ordine nel menu e' in kKindOrder
 static const Choice kKinds[] = {
-    { L"Video + audio", L"Video + audio", L"il video completo, pronto da guardare" },
-    { L"Solo audio", L"Solo audio", L"solo la traccia audio (musica, podcast)" },
-    { L"Scegli ogni volta", L"Scegli ogni volta", L"analizza il link e mostra tutti i formati" },
-    { L"Solo video", L"Solo video", L"immagini senza audio (montaggio, archivio)" },
-    { L"Solo sottotitoli", L"Solo sottotitoli", L"niente video n\u00e9 audio, solo i file dei sottotitoli" },
+    { N_(L"Video + audio"), N_(L"Video + audio"), N_(L"il video completo, pronto da guardare") },
+    { N_(L"Solo audio"), N_(L"Solo audio"), N_(L"solo la traccia audio (musica, podcast)") },
+    { N_(L"Scegli ogni volta"), N_(L"Scegli ogni volta"), N_(L"analizza il link e mostra tutti i formati") },
+    { N_(L"Solo video"), N_(L"Solo video"), N_(L"immagini senza audio (montaggio, archivio)") },
+    { N_(L"Solo sottotitoli"), N_(L"Solo sottotitoli"), N_(L"niente video n\u00e9 audio, solo i file dei sottotitoli") },
 };
 static const int kKindOrder[] = { DK_VIDEO, DK_VIDEOONLY, DK_AUDIO, DK_SUBS, DK_MANUAL };
 static const Choice kSubFmts[] = {
-    { L"SRT", L"SRT", L"leggibile da qualsiasi lettore (serve FFmpeg)" },
-    { L"Originale", L"Originale", L"come fornito dal sito (VTT, ASS...)" },
+    { L"SRT", L"SRT", N_(L"leggibile da qualsiasi lettore (serve FFmpeg)") },
+    { N_(L"Originale"), N_(L"Originale"), N_(L"come fornito dal sito (VTT, ASS...)") },
 };
 static bool KindIsVideo(int k) { return k == DK_VIDEO || k == DK_VIDEOONLY; }
 // Qualita' video: altezza massima (0 = la migliore disponibile)
@@ -105,27 +112,27 @@ static bool KindIsVideo(int k) { return k == DK_VIDEO || k == DK_VIDEOONLY; }
 static const int kVideoHeights[] = { 0, 2160, 1440, 1080, 720, 480, 360, -1 };
 static const int kAskQuality = 7;
 static const Choice kVideoQ[] = {
-    { L"Auto", L"Auto", L"la risoluzione più alta disponibile" },
+    { L"Auto", L"Auto", N_(L"la risoluzione più alta disponibile") },
     { L"2160p (4K)", L"2160p (4K)", nullptr },
     { L"1440p (2K)", L"1440p (2K)", nullptr },
     { L"1080p (Full HD)", L"1080p (Full HD)", nullptr },
     { L"720p (HD)", L"720p (HD)", nullptr },
     { L"480p", L"480p", nullptr },
     { L"360p", L"360p", nullptr },
-    { L"Chiedi ogni volta", L"Chiedi ogni volta", L"mostra le risoluzioni del video prima di scaricare" },
+    { N_(L"Chiedi ogni volta"), N_(L"Chiedi ogni volta"), N_(L"mostra le risoluzioni del video prima di scaricare") },
 };
 static const Choice kContainers[] = {
-    { L"MP4", L"MP4", L"compatibile con tutto: TV, telefoni, editor video" },
-    { L"MKV", L"MKV", L"accetta qualsiasi codec, più tracce audio e sottotitoli" },
+    { L"MP4", L"MP4", N_(L"compatibile con tutto: TV, telefoni, editor video") },
+    { L"MKV", L"MKV", N_(L"accetta qualsiasi codec, più tracce audio e sottotitoli") },
 };
 // Formati audio: 0 MP3, 1 M4A, 2 originale
 static const Choice kAudioFmts[] = {
-    { L"MP3", L"MP3", L"compatibile ovunque" },
-    { L"M4A (AAC)", L"M4A", L"qualità migliore a parità di dimensione" },
-    { L"Originale", L"Originale", L"nessuna conversione: come fornito dal sito" },
+    { L"MP3", L"MP3", N_(L"compatibile ovunque") },
+    { L"M4A (AAC)", L"M4A", N_(L"qualità migliore a parità di dimensione") },
+    { N_(L"Originale"), N_(L"Originale"), N_(L"nessuna conversione: come fornito dal sito") },
 };
 static const Choice kAudioQ[] = {
-    { L"Migliore (VBR)", L"Migliore", L"qualità massima, bitrate variabile" },
+    { N_(L"Migliore (VBR)"), N_(L"Migliore"), N_(L"qualità massima, bitrate variabile") },
     { L"320 kbps", L"320 kbps", nullptr },
     { L"192 kbps", L"192 kbps", nullptr },
     { L"128 kbps", L"128 kbps", nullptr },
@@ -179,7 +186,7 @@ struct Item {
 struct Settings {
     std::wstring folder, ytdlp, ffmpeg, subLangs = L"it.*,en.*", extra;
     Preset preset;
-    int maxDl = 3, conns = 8, theme = 0;
+    int maxDl = 3, conns = 8, theme = 0, lang = 0;   // lang: 0 come Windows, 1 italiano, 2 inglese
     bool playlist = false, subs = false, autoSubs = false, segmented = true, tray = true;
     WINDOWPLACEMENT wp{};
     bool hasWp = false;
@@ -361,7 +368,7 @@ static std::wstring Win32Err(DWORD e) {
     wchar_t* buf = nullptr;
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                    nullptr, e, 0, (LPWSTR)&buf, 0, nullptr);
-    std::wstring s = buf ? Trim(buf) : L"errore " + std::to_wstring(e);
+    std::wstring s = buf ? Trim(buf) : TR(L"errore ") + std::to_wstring(e);
     if (buf) LocalFree(buf);
     return s;
 }
@@ -498,6 +505,7 @@ static void LoadSettings() {
     g_set.maxDl     = std::clamp(IniInt(L"MaxDownloads", 3), 1, 8);
     g_set.conns     = std::clamp(IniInt(L"Connections", 8), 1, 32);
     g_set.theme     = std::clamp(IniInt(L"Theme", 0), 0, 2);
+    g_set.lang      = std::clamp(IniInt(L"Language", 0), 0, 2);
     g_set.playlist  = IniInt(L"Playlist", 0) != 0;
     g_set.subs      = IniInt(L"Subtitles", 0) != 0;
     g_set.autoSubs  = IniInt(L"AutoSubtitles", 0) != 0;
@@ -528,6 +536,7 @@ static void SaveSettings() {
     IniSetInt(L"MaxDownloads", g_set.maxDl);
     IniSetInt(L"Connections", g_set.conns);
     IniSetInt(L"Theme", g_set.theme);
+    IniSetInt(L"Language", g_set.lang);
     IniSetInt(L"Playlist", g_set.playlist);
     IniSetInt(L"Subtitles", g_set.subs);
     IniSetInt(L"AutoSubtitles", g_set.autoSubs);

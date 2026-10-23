@@ -15,6 +15,12 @@
   <a href="CHANGELOG.md">Changelog tecnico</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/Kyo89-sudo/Stackly/issues">Segnala un problema</a>
+  &nbsp;·&nbsp;
+  <a href="#english">English</a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshot-dark-it.png" width="820" alt="Stackly, finestra principale con il tema scuro">
 </p>
 
 ## Cosa fa
@@ -28,6 +34,7 @@
 - **Scelta precisa dei formati**: risoluzione, codec, più tracce audio insieme (per esempio italiano + audiodescrizione), sottotitoli originali o automatici, anche da soli.
 - **MP4 o MKV**, audio in **MP3**, **M4A** o formato originale. Unione audio/video senza ricodifica.
 - **Tema chiaro e scuro**, che segue Windows o si sceglie a mano.
+- **Italiano e inglese**: la lingua segue quella di Windows o si sceglie dal menu ⋯ → Lingua / Language.
 - **Area di notifica**: chiudendo la finestra continua a scaricare e avvisa a fine download.
 - **Si aggiorna da sé**: scarica e aggiorna yt-dlp, FFmpeg e Deno dal menu.
 
@@ -118,7 +125,7 @@ cmake -S . -B build -A x64
 cmake --build build --config Release
 ```
 
-L'icona si rigenera con `python3 tools/make_icon.py` (Pillow + NumPy). I test portabili sono in `tests/`, per esempio:
+L'icona si rigenera con `python3 tools/make_icon.py` (Pillow + NumPy). Le traduzioni sono in `tools/lang_en.json`: `python3 tools/i18n.py` rigenera `src/lang_table.inc` e segnala i testi senza traduzione. I test portabili sono in `tests/`, per esempio:
 
 ```sh
 g++ -std=c++17 -fsanitize=address,undefined tests/json_test.cpp -o json_test && ./json_test
@@ -134,14 +141,26 @@ src/engine.h      processi yt-dlp/ffmpeg, motore nativo, strumenti, analisi
 src/net.h         download segmentato WinHTTP, miniature (WIC)
 src/json.h        parser JSON per l'output di yt-dlp -J
 src/app.h         tipi, palette, impostazioni, utilità
+src/lang.h        localizzazione: TR(), scelta della lingua
+src/lang_table.inc  tabella italiano → inglese (generata da tools/i18n.py)
 installer/        StacklySetup (installer e disinstallatore)
-tools/            generatore dell'icona
+tools/            icona (make_icon.py) e traduzioni (i18n.py, lang_en.json)
 tests/            test portabili
+docs/             screenshot
 ```
 
 ## Storico delle versioni
 
 Clicca su una versione per vedere cosa è cambiato. I dettagli tecnici sono nel [changelog](CHANGELOG.md).
+
+<details>
+<summary><b>0.6.0</b> — inglese e licenza GPL</summary>
+
+- Interfaccia anche in **inglese**: segue la lingua di Windows o si sceglie dal menu ⋯ → Lingua / Language (serve un riavvio, che Stackly propone da solo). Anche l'installer parla inglese su Windows non italiano.
+- Stackly è ora software libero con licenza **GNU GPL v3.0**.
+- Il testo del profilo in alto non viene più tagliato.
+
+</details>
 
 <details>
 <summary><b>0.5.3</b> — correzioni e robustezza</summary>
@@ -206,6 +225,27 @@ Clicca su una versione per vedere cosa è cambiato. I dettagli tecnici sono nel 
 
 </details>
 
+## Licenza
+
+Stackly è software libero, distribuito con licenza [GNU GPL v3.0](LICENSE).
+yt-dlp, FFmpeg e Deno sono programmi separati, con le proprie licenze, scaricati a parte.
+
 ## Note
 
 Rispetta i termini d'uso dei siti da cui scarichi e il diritto d'autore. I contenuti protetti da DRM non sono scaricabili.
+
+## English
+
+**Stackly** is a lightweight native Windows (Win32 C++17) GUI for **yt-dlp**, inspired by Stacher's layout. A single `.exe`, no runtime required. The interface is available in **English and Italian** (it follows the Windows language, or pick it from menu ⋯ → Lingua / Language).
+
+- **Downloads video, audio and subtitles** from YouTube and every other site supported by yt-dlp.
+- **Built-in segmented downloader**, no aria2 needed: multiple HTTP connections per file, resume support, parallel HLS/DASH fragments via yt-dlp, several downloads at once.
+- **Download profiles**: Video + audio, Video only, Audio only (MP3 / M4A / original), Subtitles only, or *Choose every time*.
+- **Format picker**: resolution, codec, multiple audio tracks at once, original or auto-generated subtitles. *Ask every time* shows only the resolutions actually available, with estimated size.
+- **MP4 or MKV**, merged without re-encoding. Light/dark theme, tray mode, keeps yt-dlp / FFmpeg / Deno up to date.
+
+**Install:** grab `StacklySetup-x.y.z.exe` (per-user install, no admin rights) or the portable zip from [Releases](https://github.com/Kyo89-sudo/Stackly/releases/latest). Requires Windows 10 or 11, 64-bit.
+
+**Build:** `build.bat` (Visual Studio 2019/2022) or `./make_release.sh` (llvm-mingw, also from Linux). Translations live in `tools/lang_en.json`; `python3 tools/i18n.py` regenerates `src/lang_table.inc` and fails if a string is missing.
+
+**License:** [GNU GPL v3.0](LICENSE). Please respect the terms of service of the sites you download from; DRM-protected content is not supported.
