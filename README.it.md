@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshot-dark-it.png" width="820" alt="Stackly, finestra principale con il tema scuro">
+  <img src="docs/stackly-window.png" width="820" alt="Stackly, finestra principale con il tema scuro">
 </p>
 
 ## Cosa fa
