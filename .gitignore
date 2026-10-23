@@ -1,0 +1,6 @@
+build/
+build-mingw/
+dist/
+installer/payload/
+__pycache__/
+*.pyc

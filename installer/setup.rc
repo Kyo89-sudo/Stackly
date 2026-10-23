@@ -1,0 +1,36 @@
+#pragma code_page(65001)
+#include <windows.h>
+#include "../src/resource.h"
+
+#define IDR_PAYLOAD 200
+#define IDI_SETUP   201
+
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+IDI_SETUP ICON "../src/stackly.ico"
+1 RT_MANIFEST "setup.manifest"
+IDR_PAYLOAD RCDATA "payload/Stackly.exe"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION STACKLY_VERSION_NUM
+ PRODUCTVERSION STACKLY_VERSION_NUM
+ FILEFLAGSMASK 0x3fL
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041004b0"
+        BEGIN
+            VALUE "FileDescription", "Installazione di Stackly"
+            VALUE "FileVersion", STACKLY_VERSION_STR
+            VALUE "ProductName", "Stackly"
+            VALUE "ProductVersion", STACKLY_VERSION_STR
+            VALUE "OriginalFilename", "StacklySetup.exe"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x410, 1200
+    END
+END
