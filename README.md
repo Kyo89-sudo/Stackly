@@ -27,7 +27,7 @@
 
 ## Features
 
-- **Download video, audio and subtitles** from YouTube, Vimeo, SoundCloud, Twitch, RaiPlay, Mediaset and every other site supported by yt-dlp.
+- **Download video, audio and subtitles** from YouTube, Vimeo, SoundCloud, Twitch, RaiPlay, and every other site supported by yt-dlp.
 - **Built-in segmented downloader**, no aria2 or other tools needed:
   - direct files are split into blocks and fetched over several HTTP connections in parallel;
   - interrupted downloads resume where they stopped;
