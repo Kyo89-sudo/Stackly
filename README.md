@@ -1,9 +1,21 @@
-# Stackly
+<p align="center">
+  <img src="res/stackly_256.png" width="128" height="128" alt="Icona di Stackly">
+</p>
 
-Interfaccia per **yt-dlp** ispirata a Stacher, ricostruita da zero (Stacher è closed source).
-Win32 C++17 nativo: un solo `.exe` da ~700 KB, nessun runtime da installare.
+<h1 align="center">Stackly</h1>
 
-Progetto e download delle versioni: <https://github.com/Kyo89-sudo/Stackly> — changelog tecnico in [`CHANGELOG.md`](CHANGELOG.md).
+<p align="center">
+  Interfaccia per <b>yt-dlp</b> ispirata a Stacher, ricostruita da zero.<br>
+  Win32 C++17 nativo: un solo <code>.exe</code>, nessun runtime da installare.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Kyo89-sudo/Stackly/releases/latest"><b>Scarica l'ultima versione</b></a>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Changelog tecnico</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/Kyo89-sudo/Stackly/issues">Segnala un problema</a>
+</p>
 
 ## Novità della 0.5.3
 
