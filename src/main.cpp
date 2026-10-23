@@ -278,6 +278,7 @@ static void RetryItem(Item& it) {
     it.err.clear(); it.pct.clear(); it.size.clear(); it.speed.clear(); it.eta.clear();
     it.pctValue = 0;
     it.plIdx = it.plCount = 0;
+    it.procSince = 0;
     it.subsWritten = 0;
     it.filePath.clear();
     it.nativeTried = false;
@@ -444,16 +445,59 @@ static LRESULT CALLBACK ListSubclass(HWND h, UINT msg, WPARAM wp, LPARAM lp, UIN
 // ---------------------------------------------------------------------------
 // Area di notifica (tray)
 // ---------------------------------------------------------------------------
+// Icona piccola alla misura giusta per la scala attuale dello schermo (16, 20, 24, 32 px...):
+// LoadIconMetric sceglie l'immagine adatta dall'.ico invece di ridimensionare quella da 16 px.
+static HICON g_trayIcon = nullptr, g_smallIcon = nullptr;
+
+static HICON LoadSmallAppIcon() {
+    HICON h = nullptr;
+    if (FAILED(LoadIconMetric(g_inst, MAKEINTRESOURCEW(IDI_APP), LIM_SMALL, &h)) || !h)
+        h = (HICON)LoadImageW(g_inst, MAKEINTRESOURCEW(IDI_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                              GetSystemMetrics(SM_CYSMICON), 0);
+    return h;
+}
+
+// Iconcina della barra del titolo per i DPI della finestra
+static void UpdateWindowSmallIcon() {
+    using Fn = int(WINAPI*)(int, UINT);
+    static Fn metricsForDpi = reinterpret_cast<Fn>(reinterpret_cast<void*>(
+        GetProcAddress(GetModuleHandleW(L"user32.dll"), "GetSystemMetricsForDpi")));
+    int cx = metricsForDpi ? metricsForDpi(SM_CXSMICON, g_dpi) : GetSystemMetrics(SM_CXSMICON);
+    HICON h = (HICON)LoadImageW(g_inst, MAKEINTRESOURCEW(IDI_APP), IMAGE_ICON, cx, cx, 0);
+    if (!h) return;
+    SendMessageW(g_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)h);
+    if (g_smallIcon) DestroyIcon(g_smallIcon);
+    g_smallIcon = h;
+}
+
+// Ricarica l'icona della tray (cambio di scala dello schermo o di tema)
+static void TrayRefreshIcon() {
+    HICON h = LoadSmallAppIcon();
+    if (!h) return;
+    if (g_trayAdded) {
+        NOTIFYICONDATAW nid{};
+        nid.cbSize = sizeof(nid);
+        nid.hWnd = g_hwnd;
+        nid.uID = 1;
+        nid.uFlags = NIF_ICON;
+        nid.hIcon = h;
+        Shell_NotifyIconW(NIM_MODIFY, &nid);
+    }
+    if (g_trayIcon) DestroyIcon(g_trayIcon);
+    g_trayIcon = h;
+}
+
 static void TrayAdd() {
     if (g_trayAdded) return;
+    if (g_trayIcon) DestroyIcon(g_trayIcon);
+    g_trayIcon = LoadSmallAppIcon();
     NOTIFYICONDATAW nid{};
     nid.cbSize = sizeof(nid);
     nid.hWnd = g_hwnd;
     nid.uID = 1;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP;
     nid.uCallbackMessage = WM_APP_TRAY;
-    nid.hIcon = (HICON)LoadImageW(g_inst, MAKEINTRESOURCEW(IDI_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
-                                  GetSystemMetrics(SM_CYSMICON), 0);
+    nid.hIcon = g_trayIcon;
     wcscpy_s(nid.szTip, L"Stackly");
     g_trayAdded = Shell_NotifyIconW(NIM_ADD, &nid) != FALSE;
     nid.uVersion = NOTIFYICON_VERSION_4;
@@ -934,6 +978,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         UpdateChipTexts();
         SetWindowTheme(g_list, g_dark ? L"DarkMode_Explorer" : L"Explorer", nullptr);
         Layout();
+        UpdateWindowSmallIcon();
         TrayAdd();
         SetTimer(hwnd, kRepaintTimer, kRepaintMs, nullptr);
         PostMessageW(hwnd, WM_APP_FIRSTRUN, 0, 0);
@@ -954,6 +999,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         auto* r = reinterpret_cast<RECT*>(lp);
         SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top, SWP_NOZORDER | SWP_NOACTIVATE);
         Layout();
+        UpdateWindowSmallIcon();
+        TrayRefreshIcon();
         return 0;
     }
 
@@ -1004,7 +1051,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         if (wp == kRepaintTimer) {
             // Ridisegno raggruppato: ogni 150 ms solo le card cambiate
             bool any = false;
-            for (auto& p : g_items) if (p->dirty) { InvalidateItem(p->id); any = true; }
+            for (auto& p : g_items) {
+                if (p->st == St::Processing) p->dirty = true;   // anima la barra e il tempo di "Creazione file"
+                if (p->dirty) { InvalidateItem(p->id); any = true; }
+            }
             if (any) UpdateStatus();
             static int tick = 0;
             if (++tick % 8 == 0) UpdateTrayTip();
@@ -1240,6 +1290,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     case WM_SETTINGCHANGE:
         if (lp && !wcscmp(reinterpret_cast<const wchar_t*>(lp), L"ImmersiveColorSet") && g_set.theme == 0) ApplyTheme();
+        if (wp == SPI_SETICONMETRICS || wp == SPI_SETNONCLIENTMETRICS) TrayRefreshIcon();   // dimensione icone cambiata
         break;
 
     case WM_CLOSE:

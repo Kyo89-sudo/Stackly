@@ -600,7 +600,7 @@ static DWORD WINAPI NativeProc(LPVOID p) {
             in += L"-i " + Quote(streams[i].part) + L" ";
             map += L"-map " + std::to_wstring(i) + L" ";
         }
-        std::wstring extra = _wcsicmp(finalExt.c_str(), L"mp4") == 0 ? L"-movflags +faststart " : L"";
+        const std::wstring extra;   // niente -movflags +faststart: riscriverebbe tutto il file una seconda volta
         ok = runFfmpeg(in + map + L"-c copy " + extra + Quote(finalPath));
         if (!ok && !c.cancel && _wcsicmp(finalExt.c_str(), L"mp4") == 0) {
             // Codec non ammessi in MP4: ripiega su MKV invece di fallire
@@ -614,7 +614,7 @@ static DWORD WINAPI NativeProc(LPVOID p) {
                                               : std::wstring(L"-c:a aac ") + kAudioQFfmpegAac[q];
         ok = runFfmpeg(L"-i " + Quote(streams[0].part) + L" -vn " + codec + L" " + Quote(finalPath));
     } else if (needRemux && !c.ffmpeg.empty()) {
-        std::wstring extra = _wcsicmp(finalExt.c_str(), L"mp4") == 0 ? L"-movflags +faststart " : L"";
+        const std::wstring extra;   // niente -movflags +faststart: riscriverebbe tutto il file una seconda volta
         std::wstring maps = audioOnly ? L" -vn -c:a copy " : L" -map 0 -c copy ";
         ok = runFfmpeg(L"-i " + Quote(streams[0].part) + maps + extra + Quote(finalPath));
         if (!ok && !c.cancel) {
@@ -741,7 +741,12 @@ static void OnLine(int id, const std::wstring& line) {
         it->pctValue = std::clamp(_wtof(it->pct.c_str()), 0.0, 100.0);
         bool full = it->pctValue >= 99.95;
         it->st = (full && !it->usingNative) ? St::Processing : St::Downloading;
-        if (it->st == St::Processing) { it->speed.clear(); it->eta.clear(); }
+        if (it->st == St::Processing) {
+            it->speed.clear(); it->eta.clear();
+            if (!it->procSince) it->procSince = GetTickCount64();
+        } else {
+            it->procSince = 0;
+        }
     } else if (StartsWith(line, L"[SKT]")) {
         it->title = Trim(line.substr(5));
         if (it->st == St::Starting) it->st = St::Downloading;
@@ -758,6 +763,7 @@ static void OnLine(int id, const std::wstring& line) {
         it->filePath = Trim(line.substr(5));
     } else if (StartsWith(line, L"[SKP]")) {
         it->st = St::Processing;
+        if (!it->procSince) it->procSince = GetTickCount64();
         it->pctValue = 100;
         it->speed.clear();
         it->eta.clear();

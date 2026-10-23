@@ -496,7 +496,16 @@ static void DrawCard(HDC target, const RECT& itemRc, const Item& it, bool select
     case St::Queued:      stText = TR(L"In coda"); break;
     case St::Starting:    stText = TR(L"Avvio..."); break;
     case St::Downloading: stText = it.pct.empty() ? TR(L"Download...") : it.pct; stColor = P.text; break;
-    case St::Processing:  stText = TR(L"Creazione file..."); stColor = P.text; break;
+    case St::Processing: {
+        // tempo trascorso: la fase di unione/conversione puo' durare a lungo su file grandi
+        stText = TR(L"Creazione file...");
+        if (it.procSince) {
+            ULONGLONG s = (GetTickCount64() - it.procSince) / 1000;
+            if (s >= 2) { wchar_t b[24]; swprintf(b, 24, L" %llu:%02llu", s / 60, s % 60); stText += b; }
+        }
+        stColor = P.text;
+        break;
+    }
     case St::Done:        stText = TR(L"Completato"); stColor = P.green; action = G_OPENFOLDER; break;
     case St::Error:       stText = TR(L"Errore"); stColor = P.red; action = G_REFRESH; break;
     case St::Cancelled:   stText = TR(L"Annullato"); action = G_REFRESH; break;
@@ -530,7 +539,15 @@ static void DrawCard(HDC target, const RECT& itemRc, const Item& it, bool select
         // barra di avanzamento
         FillRound(gr, g.bar, (float)S(2), P.track);
         double pct = it.st == St::Done ? 100.0 : it.pctValue;
-        if (it.st == St::Processing) pct = 100.0;
+        if (it.st == St::Processing) {
+            // barra indeterminata: un tratto in gradiente che scorre, segno che il lavoro prosegue
+            pct = 0;
+            int bw = g.bar.right - g.bar.left, seg = std::max(bw / 4, S(40));
+            double t = (double)(GetTickCount64() % 1600) / 1600.0;
+            int x = g.bar.left - seg + (int)((bw + seg) * t);
+            RECT f{ std::max<LONG>(x, g.bar.left), g.bar.top, std::min<LONG>(x + seg, g.bar.right), g.bar.bottom };
+            if (f.right > f.left) FillRoundGrad(gr, f, (float)S(2), P.gradA, P.gradB);
+        }
         if (pct > 0) {
             RECT f = g.bar;
             f.right = f.left + std::max((int)((g.bar.right - g.bar.left) * pct / 100.0), S(6));

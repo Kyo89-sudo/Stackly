@@ -154,6 +154,15 @@ docs/             screenshot
 Clicca su una versione per vedere cosa è cambiato. I dettagli tecnici sono nel [changelog](CHANGELOG.md).
 
 <details>
+<summary><b>0.6.1</b> — icona nitida, creazione file più veloce</summary>
+
+- L'icona nell'area di notifica è nitida a qualsiasi scala dello schermo e non sembra più sfocata con la barra chiara.
+- "Creazione file…" è più veloce: gli MP4 uniti non vengono più riscritti una seconda volta.
+- Mentre il file viene creato, una barra animata e il tempo trascorso mostrano che il lavoro prosegue.
+
+</details>
+
+<details>
 <summary><b>0.6.0</b> — inglese e licenza GPL</summary>
 
 - Interfaccia anche in **inglese**: segue la lingua di Windows o si sceglie dal menu ⋯ → Lingua / Language (serve un riavvio, che Stackly propone da solo). Anche l'installer parla inglese su Windows non italiano.

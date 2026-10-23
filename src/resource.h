@@ -1,8 +1,8 @@
 #pragma once
 
-#define STACKLY_VERSION_STR     "0.6.0"
-#define STACKLY_VERSION_W       L"0.6.0"
-#define STACKLY_VERSION_NUM     0,6,0,0
+#define STACKLY_VERSION_STR     "0.6.1"
+#define STACKLY_VERSION_W       L"0.6.1"
+#define STACKLY_VERSION_NUM     0,6,1,0
 
 #define IDI_APP                 101
 #define IDR_ACCEL               103

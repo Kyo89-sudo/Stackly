@@ -86,10 +86,19 @@ def stroke(d, pts, w, fill=255):
     for (x, y) in (pts[0], pts[-1]):
         d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=fill)
 
+# Misure piccole (tray, barra delle applicazioni, Esplora file): niente ombre sfumate, che su fondo
+# chiaro diventano un alone grigio e fanno sembrare l'icona sfocata, e bordi allineati ai pixel.
+CRISP = False
+K = 1
+
+def snap(v):
+    return round(v / K) * K if CRISP else v
+
 def glyph3d(c, face, gmask, S, depth, top_stops, side_col, clip=True):
     """Glifo estruso: ombra sulla faccia, spessore, faccia superiore sfumata, filo di luce."""
-    sh = blur(shift(gmask, S * 0.01, depth + S * 0.03), S * 0.025)
-    layer(c, (40, 0, 80, 255), ImageChops.multiply(sh, face) if clip else sh, 110)
+    if not CRISP:
+        sh = blur(shift(gmask, S * 0.01, depth + S * 0.03), S * 0.025)
+        layer(c, (40, 0, 80, 255), ImageChops.multiply(sh, face) if clip else sh, 110)
     steps = max(1, int(depth))
     for k in range(steps, 0, -1):
         t = k / steps
@@ -170,10 +179,18 @@ def variant_C(S, small):
 VARIANTS = {'A': variant_A, 'B': variant_B, 'C': variant_C}
 
 def render(size, v):
+    global CRISP, K
     k = 6 if size <= 48 else (4 if size <= 128 else 3)
     S = size * k
-    img = VARIANTS[v](S, size <= 24)
-    return img.resize((size, size), Image.LANCZOS)
+    CRISP, K = size <= 32, k
+    try:
+        img = VARIANTS[v](S, size <= 24)
+    finally:
+        CRISP, K = False, 1
+    img = img.resize((size, size), Image.LANCZOS)
+    if size <= 32:   # un filo di nitidezza dopo il ridimensionamento
+        img = img.filter(ImageFilter.UnsharpMask(radius=0.6, percent=60, threshold=0))
+    return img
 
 # ---------------------------------------------------------------------------
 # Varianti "download + streaming video"
@@ -415,7 +432,8 @@ def knockout(c, mask):
 
 def arrow3d(c, S, a, gap, top_stops, side_col):
     knockout(c, blur(a, gap).point(lambda v: 255 if v > 4 else 0).filter(ImageFilter.GaussianBlur(0.8)))
-    layer(c, (30, 0, 60, 255), blur(shift(a, 0, S * 0.045), S * 0.03), 120)
+    if not CRISP:
+        layer(c, (30, 0, 60, 255), blur(shift(a, 0, S * 0.045), S * 0.03), 120)
     glyph3d(c, None, a, S, S * 0.03, top_stops, side_col, clip=False)
 
 def variant_F1(S, small):
@@ -539,14 +557,16 @@ VARIANTS['H'] = variant_H
 # ---------------------------------------------------------------------------
 def player_R(c, S, small, pal=None):
     pal = pal or PAL_R1
-    x0, y0, x1, y1 = S * 0.07, S * 0.14, S * 0.93, S * 0.70
-    depth = S * 0.04
+    x0, y0, x1, y1 = snap(S * 0.07), snap(S * 0.14), snap(S * 0.93), snap(S * 0.70)
+    depth = snap(S * 0.04) if CRISP else S * 0.04
     body = rrect(S, [x0, y0, x1, y1], S * 0.09)
-    layer(c, (50, 0, 25, 255), blur(shift(body, 0, depth + S * 0.03), S * 0.035), 120)
+    if not CRISP:
+        layer(c, (50, 0, 25, 255), blur(shift(body, 0, depth + S * 0.03), S * 0.035), 120)
     layer(c, grad(S, pal['side'], (1, 0)), ImageChops.lighter(shift(body, 0, depth), body))
     layer(c, grad(S, pal['body']), body)
     layer(c, (255, 255, 255, 255), blur(ImageChops.subtract(body, shift(body, 0, S * 0.012)), S * 0.004), 160)
-    m = S * (0.06 if small else 0.045)
+    m = snap(S * (0.06 if small else 0.045))
+    if CRISP: m = max(m, K)   # cornice di almeno un pixel pieno
     scr = rrect(S, [x0 + m, y0 + m, x1 - m, y1 - m], S * 0.055)
     layer(c, grad(S, pal['screen'], y_only=True), scr)
     layer(c, (0, 0, 0, 255), ImageChops.subtract(scr, shift(scr, 0, S * 0.015)), 120)

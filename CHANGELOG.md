@@ -5,6 +5,21 @@ Versioni `x.y.z`: `x` cambi incompatibili (impostazioni, formato dei file), `y` 
 
 Progetto: <https://github.com/Kyo89-sudo/Stackly>
 
+## 0.6.1 — icona nitida e "Creazione file" piu' veloce
+
+- **Icona nella tray sfocata** (soprattutto con la barra chiara): due cause.
+  - `TrayAdd` caricava l'icona con `SM_CXSMICON`, cioe' quasi sempre 16 px, che Windows ingrandiva a
+    20/24 px con lo schermo al 125–150 %. Ora `LoadSmallAppIcon` usa `LoadIconMetric(LIM_SMALL)`;
+    `TrayRefreshIcon` la ricarica su `WM_DPICHANGED` e su `WM_SETTINGCHANGE` (metriche delle icone).
+    L'iconcina della barra del titolo si aggiorna ai DPI della finestra (`GetSystemMetricsForDpi`).
+  - Le misure fino a 32 px dell'icona avevano ombre sfumate (cornice, freccia, play) che su fondo chiaro
+    diventano un alone. `tools/icon3d.py`: modalita' `CRISP` per le misure piccole, senza ombre, con i
+    bordi della cornice allineati ai pixel (`snap`) e un leggero `UnsharpMask` dopo il ridimensionamento.
+- **"Creazione file" piu' veloce**: tolto `-movflags +faststart` dall'unione/remux del motore nativo; faceva
+  riscrivere a ffmpeg l'intero MP4 una seconda volta per spostare l'indice, utile solo per lo streaming web.
+- **"Creazione file" non sembra piu' bloccato**: barra indeterminata animata (tratto in gradiente che scorre)
+  e tempo trascorso accanto alla scritta (`Item::procSince`); il timer ridisegna le righe in questa fase.
+
 ## 0.6.0 — localizzazione inglese e licenza GPL
 
 ### Localizzazione

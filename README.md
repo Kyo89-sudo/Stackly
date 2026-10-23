@@ -158,6 +158,15 @@ The source strings are written in Italian and translated through `TR()`; see `sr
 Click a version to see what changed. Technical details are in the [changelog](CHANGELOG.md).
 
 <details>
+<summary><b>0.6.1</b> — sharper icon, faster file creation</summary>
+
+- The notification-area icon is sharp at every display scale and no longer looks blurry on a light taskbar.
+- "Creating file…" is faster: merged MP4 files are no longer rewritten a second time.
+- While a file is being created, an animated bar and the elapsed time show that work is in progress.
+
+</details>
+
+<details>
 <summary><b>0.6.0</b> — English interface and GPL license</summary>
 
 - **English interface**: follows the Windows language, or pick it from menu ⋯ → Lingua / Language (a restart is needed and Stackly offers it). The installer is in English too on non-Italian Windows.

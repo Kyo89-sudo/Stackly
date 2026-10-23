@@ -170,6 +170,7 @@ struct Item {
     std::wstring customArgs, customLabel;
     std::vector<std::wstring> parts;   // file parziali del motore nativo (eliminati se si rimuove l'elemento)
     int subsWritten = 0;               // file di sottotitoli scritti (tipo Solo sottotitoli)
+    ULONGLONG procSince = 0;           // inizio della fase "Creazione file" (unione/conversione), 0 = non in corso
     // stato
     int plIdx = 0, plCount = 0;
     double pctValue = 0;
