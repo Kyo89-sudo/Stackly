@@ -115,3 +115,23 @@ Comprende anche la 0.4.0, build intermedia mai pubblicata a sé.
 ### Build
 - Installer con versione nel nome (`StacklySetup-x.y.z.exe`) per evitare la cache icone di Explorer.
 - `make_release.sh` compila anche da Linux con llvm-mingw (`./make_release.sh` con il toolchain nel PATH).
+
+## 0.3
+
+- Interfaccia più sobria: angoli quasi squadrati, bordi sottili, testi secondari più leggibili.
+- Opzioni con etichette esplicite (Tipo / Qualità / Formato) al posto dei chip.
+- Qualità **Auto** e **Chiedi ogni volta** (`QuickProc`, `BuildQuickRows`): risoluzioni realmente disponibili
+  con dimensione stimata da `filesize`/`filesize_approx` o `tbr × durata`.
+
+## 0.2
+
+- Interfaccia a card con anteprime (miniature decodificate con WIC in `net::DecodeThumb`), tema chiaro/scuro
+  (`SystemIsDark`, API non documentate di uxtheme per menu scuri), icone Segoe Fluent/MDL2.
+- **Finestra Formati** (`PickerProc`): video, più tracce audio (`--audio-multistreams`), sottotitoli anche
+  da soli, incorporati o come file, conversione in SRT.
+- **MP4 / MKV** per preset e scelte manuali.
+- **Download segmentato nativo** (`net.h`): blocchi da 4 MiB con HTTP Range su N connessioni WinHTTP,
+  ripresa tramite mappa `.stkp`, file sparse; HLS/DASH lasciati a yt-dlp con `-N`; budget globale di
+  24 connessioni (semaforo `g_connSlots`); ripiego automatico su yt-dlp.
+- Unione senza ricodifica (`-c copy`), yt-dlp e ffmpeg a priorità sotto il normale dentro un job object.
+- Area di notifica, istanza singola (mutex `Local\Stackly.SingleInstance`), installer `StacklySetup.exe`.
