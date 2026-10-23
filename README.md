@@ -1,110 +1,110 @@
 <p align="center">
-  <img src="res/stackly_256.png" width="128" height="128" alt="Icona di Stackly">
+  <img src="res/stackly_256.png" width="128" height="128" alt="Stackly icon">
 </p>
 
 <h1 align="center">Stackly</h1>
 
 <p align="center">
-  Interfaccia per <b>yt-dlp</b> ispirata a Stacher, ricostruita da zero.<br>
-  Win32 C++17 nativo: un solo <code>.exe</code>, nessun runtime da installare.
+  A lightweight Windows GUI for <b>yt-dlp</b>, inspired by Stacher and rebuilt from scratch.<br>
+  Native Win32 C++17: a single <code>.exe</code>, no runtime to install.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kyo89-sudo/Stackly/releases/latest"><b>Scarica l'ultima versione</b></a>
+  <a href="https://github.com/Kyo89-sudo/Stackly/releases/latest"><b>Download the latest version</b></a>
   &nbsp;·&nbsp;
-  <a href="CHANGELOG.md">Changelog tecnico</a>
+  <a href="CHANGELOG.md">Technical changelog</a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/Kyo89-sudo/Stackly/issues">Segnala un problema</a>
+  <a href="https://github.com/Kyo89-sudo/Stackly/issues">Report a problem</a>
   &nbsp;·&nbsp;
-  <a href="#english">English</a>
+  <a href="README.it.md">Italiano</a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshot-dark-it.png" width="820" alt="Stackly, finestra principale con il tema scuro">
+  <img src="docs/screenshot-dark-it.png" width="820" alt="Stackly main window, dark theme">
 </p>
 
-## Cosa fa
+## Features
 
-- **Scarica video, audio e sottotitoli** da YouTube, RaiPlay, Mediaset, Vimeo, SoundCloud, Twitch e da tutti gli altri siti supportati da yt-dlp.
-- **Download segmentato nativo**, senza aria2 né altri programmi:
-  - i file diretti vengono divisi in blocchi e scaricati con più connessioni HTTP in parallelo;
-  - si riprende da dove ci si era fermati;
-  - i flussi HLS/DASH (RaiPlay, Twitch…) scaricano i frammenti in parallelo tramite yt-dlp;
-  - più download insieme, con un limite comune di connessioni.
-- **Scelta precisa dei formati**: risoluzione, codec, più tracce audio insieme (per esempio italiano + audiodescrizione), sottotitoli originali o automatici, anche da soli.
-- **MP4 o MKV**, audio in **MP3**, **M4A** o formato originale. Unione audio/video senza ricodifica.
-- **Tema chiaro e scuro**, che segue Windows o si sceglie a mano.
-- **Italiano e inglese**: la lingua segue quella di Windows o si sceglie dal menu ⋯ → Lingua / Language.
-- **Area di notifica**: chiudendo la finestra continua a scaricare e avvisa a fine download.
-- **Si aggiorna da sé**: scarica e aggiorna yt-dlp, FFmpeg e Deno dal menu.
+- **Download video, audio and subtitles** from YouTube, Vimeo, SoundCloud, Twitch, RaiPlay, Mediaset and every other site supported by yt-dlp.
+- **Built-in segmented downloader**, no aria2 or other tools needed:
+  - direct files are split into blocks and fetched over several HTTP connections in parallel;
+  - interrupted downloads resume where they stopped;
+  - HLS/DASH streams (Twitch, RaiPlay…) download fragments in parallel through yt-dlp;
+  - several downloads at once, sharing a common connection limit.
+- **Precise format picking**: resolution, codec, multiple audio tracks at once (e.g. original + audio description), original or auto-generated subtitles, even on their own.
+- **MP4 or MKV**, audio as **MP3**, **M4A** or the original format. Audio and video are merged without re-encoding.
+- **Light and dark theme**, following Windows or chosen manually.
+- **English and Italian**: the language follows Windows, or pick it from menu ⋯ → Lingua / Language.
+- **Notification area**: closing the window keeps downloads running, with a notice when they finish.
+- **Self-updating tools**: downloads and updates yt-dlp, FFmpeg and Deno from the menu.
 
-## Installazione
+## Installation
 
-Dalla pagina [Releases](https://github.com/Kyo89-sudo/Stackly/releases/latest):
+From the [Releases](https://github.com/Kyo89-sudo/Stackly/releases/latest) page:
 
-- **`StacklySetup-x.y.z.exe`**: installa per il tuo utente in `%LOCALAPPDATA%\Programs\Stackly`. Non chiede permessi di amministratore, crea i collegamenti e si disinstalla da *Impostazioni → App installate*.
-- **`Stackly-x.y.z-portable.zip`**: un solo `Stackly.exe` da mettere dove vuoi. Impostazioni e componenti restano nella sua cartella (se non è scrivibile, in `%LOCALAPPDATA%\Stackly`).
+- **`StacklySetup-x.y.z.exe`**: installs for your user in `%LOCALAPPDATA%\Programs\Stackly`. No administrator rights needed; it creates shortcuts and can be uninstalled from *Settings → Apps → Installed apps*.
+- **`Stackly-x.y.z-portable.zip`**: a single `Stackly.exe` to put anywhere. Settings and components stay in its folder (or in `%LOCALAPPDATA%\Stackly` if that folder is not writable).
 
-Requisiti: Windows 10 o 11 a 64 bit. Al primo avvio Stackly propone di scaricare i componenti che mancano.
+Requirements: Windows 10 or 11, 64-bit. On first launch Stackly offers to download the missing components.
 
-## Uso
+## Usage
 
-1. Incolla uno o più link nella barra in alto e premi **Invio** o **Scarica**.
-2. Il **profilo** a sinistra decide cosa scaricare. Il pulsante riassume le scelte attive (es. `Video + audio · 1080p · MP4`) e apre il menu delle opzioni.
-3. L'icona **Formati** dentro la barra analizza il link e mostra tutti i formati disponibili, per scegliere a mano video, tracce audio e sottotitoli.
+1. Paste one or more links into the bar at the top and press **Enter** or **Download**.
+2. The **profile** on the left decides what to download. The button sums up the active choices (e.g. `Video + audio · 1080p · MP4`) and opens the options menu.
+3. The **Formats** icon inside the bar analyzes the link and lists every available format, so you can pick video, audio tracks and subtitles by hand.
 
-### Tipi di download
+### Download types
 
-| Tipo | Opzioni |
+| Type | Options |
 |---|---|
-| **Video + audio** | qualità (Auto, 4K … 360p, *Chiedi ogni volta*), contenitore MP4/MKV, sottotitoli nel video |
-| **Solo video** | qualità, contenitore MP4/MKV |
-| **Solo audio** | formato MP3 / M4A / originale, qualità (migliore, 320, 192, 128 kbps) |
-| **Solo sottotitoli** | formato SRT o originale, anche quelli generati automaticamente |
-| **Scegli ogni volta** | apre la finestra Formati per ogni link |
+| **Video + audio** | quality (Auto, 4K … 360p, *Ask every time*), MP4/MKV container, subtitles in the video |
+| **Video only** | quality, MP4/MKV container |
+| **Audio only** | MP3 / M4A / original format, quality (best, 320, 192, 128 kbps) |
+| **Subtitles only** | SRT or original format, optionally including auto-generated ones |
+| **Choose every time** | opens the Formats window for each link |
 
-Tranne che con *Scegli ogni volta* c'è anche **Playlist intera**: se il link è una playlist o un canale, scarica tutti i video.
+Every type except *Choose every time* also has **Whole playlist**: if the link is a playlist or a channel, all its videos are downloaded.
 
-Con **Chiedi ogni volta** Stackly mostra solo le risoluzioni realmente disponibili per quel video, con la dimensione stimata.
+With **Ask every time** Stackly shows only the resolutions actually available for that video, with the estimated size.
 
-### Coda
+### Queue
 
-- Ogni riga mostra miniatura, avanzamento, velocità e tempo residuo.
-- Le icone sulla riga annullano, riprovano o aprono la cartella, e rimuovono il download dall'elenco.
-- Il clic destro offre anche apri file, copia URL e mostra nella cartella.
-- **Riprova** riprende i download segmentati da dove si erano fermati.
+- Each row shows thumbnail, progress, speed and time remaining.
+- The icons on a row cancel, retry or open the folder, and remove the download from the list.
+- Right-click also offers open file, copy URL and show in folder.
+- **Retry** resumes segmented downloads where they stopped.
 
-### Tasti
+### Shortcuts
 
-| Tasto | Azione |
+| Key | Action |
 |---|---|
-| `Ctrl+Maiusc+V` | incolla dagli appunti e scarica subito |
-| `Ctrl+O` | apre la cartella dei download |
-| `Invio` (nella coda) | apre il file |
-| `Canc` | rimuove i download selezionati |
-| `Ctrl+A` / `Ctrl+C` | seleziona tutto / copia gli URL |
+| `Ctrl+Shift+V` | paste from the clipboard and download right away |
+| `Ctrl+O` | open the downloads folder |
+| `Enter` (in the queue) | open the file |
+| `Del` | remove the selected downloads |
+| `Ctrl+A` / `Ctrl+C` | select all / copy the URLs |
 
-## Componenti
+## Components
 
-| Componente | A cosa serve |
+| Component | Purpose |
 |---|---|
-| `yt-dlp.exe` | estrazione dei link (obbligatorio) |
-| `ffmpeg.exe` + `ffprobe.exe` | unione audio/video, MP3, sottotitoli |
-| `deno.exe` | runtime JavaScript che yt-dlp usa per YouTube |
+| `yt-dlp.exe` | link extraction (required) |
+| `ffmpeg.exe` + `ffprobe.exe` | audio/video merging, MP3, subtitles |
+| `deno.exe` | JavaScript runtime used by yt-dlp for YouTube |
 
-Finiscono nella cartella `bin\` di Stackly. Si aggiornano dal menu **⋯**, e la finestra *Informazioni* mostra versione e percorso di ciascuno.
+They are stored in Stackly's `bin\` folder and updated from the **⋯** menu; the *About* window shows the version and path of each one.
 
-## Installazione silenziosa
+## Silent install
 
 ```
-StacklySetup-x.y.z.exe /S                  installazione silenziosa
-StacklySetup-x.y.z.exe /S /D=C:\Percorso   installazione silenziosa in una cartella
-uninstall.exe /uninstall /S                disinstallazione silenziosa
+StacklySetup-x.y.z.exe /S                  silent install
+StacklySetup-x.y.z.exe /S /D=C:\Path       silent install into a folder
+uninstall.exe /uninstall /S                silent uninstall
 ```
 
-## Compilazione
+## Building
 
-Ogni build produce in `dist\` l'app, l'installer e lo zip portatile.
+Every build produces the app, the installer and the portable zip in `dist\`.
 
 **Visual Studio 2019/2022**
 
@@ -112,10 +112,10 @@ Ogni build produce in `dist\` l'app, l'installer e lo zip portatile.
 build.bat
 ```
 
-**llvm-mingw / MinGW-w64**, anche da Linux:
+**llvm-mingw / MinGW-w64**, also from Linux:
 
 ```sh
-./make_release.sh /percorso/llvm-mingw/bin/x86_64-w64-mingw32-
+./make_release.sh /path/to/llvm-mingw/bin/x86_64-w64-mingw32-
 ```
 
 **CMake**
@@ -125,127 +125,113 @@ cmake -S . -B build -A x64
 cmake --build build --config Release
 ```
 
-L'icona si rigenera con `python3 tools/make_icon.py` (Pillow + NumPy). Le traduzioni sono in `tools/lang_en.json`: `python3 tools/i18n.py` rigenera `src/lang_table.inc` e segnala i testi senza traduzione. I test portabili sono in `tests/`, per esempio:
+The icon is regenerated with `python3 tools/make_icon.py` (Pillow + NumPy). Translations live in `tools/lang_en.json`: `python3 tools/i18n.py` regenerates `src/lang_table.inc` and reports any string without a translation. Portable tests are in `tests/`, for example:
 
 ```sh
 g++ -std=c++17 -fsanitize=address,undefined tests/json_test.cpp -o json_test && ./json_test
 ```
 
-## Struttura
+## Project layout
 
 ```
-src/main.cpp      finestra principale, coda, area di notifica, menu
-src/ui.h          tema, pulsanti disegnati dall'app, righe della coda
-src/dialogs.h     finestre Formati, Risoluzione, Impostazioni, Informazioni
-src/engine.h      processi yt-dlp/ffmpeg, motore nativo, strumenti, analisi
-src/net.h         download segmentato WinHTTP, miniature (WIC)
-src/json.h        parser JSON per l'output di yt-dlp -J
-src/app.h         tipi, palette, impostazioni, utilità
-src/lang.h        localizzazione: TR(), scelta della lingua
-src/lang_table.inc  tabella italiano → inglese (generata da tools/i18n.py)
-installer/        StacklySetup (installer e disinstallatore)
-tools/            icona (make_icon.py) e traduzioni (i18n.py, lang_en.json)
-tests/            test portabili
-docs/             screenshot
+src/main.cpp        main window, queue, notification area, menus
+src/ui.h            theme, owner-drawn buttons, queue rows
+src/dialogs.h       Formats, Resolution, Settings and About windows
+src/engine.h        yt-dlp/ffmpeg processes, native engine, tools, analysis
+src/net.h           WinHTTP segmented downloader, thumbnails (WIC)
+src/json.h          JSON parser for the output of yt-dlp -J
+src/app.h           types, palette, settings, utilities
+src/lang.h          localization: TR(), language selection
+src/lang_table.inc  Italian → English table (generated by tools/i18n.py)
+installer/          StacklySetup (installer and uninstaller)
+tools/              icon (make_icon.py) and translations (i18n.py, lang_en.json)
+tests/              portable tests
+docs/               screenshots
 ```
 
-## Storico delle versioni
+The source strings are written in Italian and translated through `TR()`; see `src/lang.h`.
 
-Clicca su una versione per vedere cosa è cambiato. I dettagli tecnici sono nel [changelog](CHANGELOG.md).
+## Version history
+
+Click a version to see what changed. Technical details are in the [changelog](CHANGELOG.md).
 
 <details>
-<summary><b>0.6.0</b> — inglese e licenza GPL</summary>
+<summary><b>0.6.0</b> — English interface and GPL license</summary>
 
-- Interfaccia anche in **inglese**: segue la lingua di Windows o si sceglie dal menu ⋯ → Lingua / Language (serve un riavvio, che Stackly propone da solo). Anche l'installer parla inglese su Windows non italiano.
-- Stackly è ora software libero con licenza **GNU GPL v3.0**.
-- Il testo del profilo in alto non viene più tagliato.
+- **English interface**: follows the Windows language, or pick it from menu ⋯ → Lingua / Language (a restart is needed and Stackly offers it). The installer is in English too on non-Italian Windows.
+- Stackly is now free software under the **GNU GPL v3.0**.
+- The profile text at the top is no longer cut off.
 
 </details>
 
 <details>
-<summary><b>0.5.3</b> — correzioni e robustezza</summary>
+<summary><b>0.5.3</b> — fixes and robustness</summary>
 
-- Con più download insieme, uno già finito poteva restare bloccato su "Creazione file…" finché non finiva un altro.
-- Titoli e nomi con caratteri strani non vengono più mostrati con lettere sbagliate.
-- "Scegli ogni volta" e "Chiedi ogni volta" su un link a playlist rispondono subito.
-- "Solo sottotitoli" segnala un errore se non ci sono sottotitoli nelle lingue scelte.
-- Annullare funziona anche nei rari casi in cui prima non aveva effetto.
-- Un download interrotto senza supporto alla ripresa non viene più dato per completato.
-- Niente chiusure improvvise se Windows esaurisce le risorse per i thread.
-- Menu ⋯ → "Stackly su GitHub" e "Segnala un problema..."; link al progetto nella finestra Informazioni.
-
-</details>
-
-<details>
-<summary><b>0.5.2</b> — dialoghi rifiniti</summary>
-
-- Un'unica casella di spunta quadrata per tutta l'app (Impostazioni, finestra Formati, liste).
-- Nelle Impostazioni campi e pulsanti rettangolari, con cornice sottile che diventa rubino quando sono attivi.
-- Frecce dei campi numerici nello stile dell'app; testo e cursore centrati nei campi.
-- Se all'avvio è già aperta una copia di Stackly da un'altra cartella (per esempio una versione vecchia rimasta nell'area di notifica), Stackly chiede se chiuderla e avviarsi al suo posto.
+- With several downloads at once, a finished one could stay stuck on "Creating file…" until another one ended.
+- Titles and names with unusual characters are no longer garbled.
+- "Choose every time" and "Ask every time" on a playlist link answer right away.
+- "Subtitles only" reports an error when there are no subtitles in the chosen languages.
+- Cancel now works in the rare cases where it previously had no effect.
+- An interrupted download without resume support is no longer reported as completed.
+- No more sudden crashes if Windows runs out of resources for threads.
+- Menu ⋯ → "Stackly on GitHub" and "Report a problem..."; project link in the About window.
 
 </details>
 
 <details>
-<summary><b>0.5.1</b> — tema scuro nei dialoghi</summary>
+<summary><b>0.5.2</b> — polished dialogs</summary>
 
-- Prime caselle di spunta e cornici dei campi disegnate nello stile dell'app, al posto di quelle di sistema che stonavano nel tema scuro.
-
-</details>
-
-<details>
-<summary><b>0.5.0</b> — nuova interfaccia, icona e tipi di download</summary>
-
-- **Interfaccia sul modello di Stacher**: profilo a sinistra, barra del link al centro, *Scarica* e icone a destra; coda a righe con icone per annullare, riprovare, aprire la cartella e rimuovere; barra di stato con la cartella di destinazione.
-- **Nuova icona 3D "Rubino"** e **palette magenta → rubino**, con pulsanti ridisegnati e un tema chiaro più sobrio.
-- **Tipi di download**: Video + audio, Solo video, Solo audio, Solo sottotitoli, Scegli ogni volta. Il menu del profilo mostra solo le opzioni del tipo scelto.
-- **Finestra Informazioni** con lo stato di yt-dlp, FFmpeg e Deno, e i pulsanti per aggiornarli.
-- **Download segmentato più affidabile**: connessioni davvero separate, ripresa con "Riprova" dopo un errore, velocità corretta alla ripresa, annullamento immediato, file parziali eliminati quando si rimuove un download.
-- Accenti corretti nei menu; l'installer ha la versione nel nome.
+- A single square checkbox style across the whole app (Settings, Formats window, lists).
+- Rectangular fields and buttons in Settings, with a thin border that turns ruby when active.
+- App-styled arrows on number fields; text and caret centered in the fields.
+- If another copy of Stackly is already open from a different folder (for example an old version left in the notification area), Stackly offers to close it and start instead.
 
 </details>
 
 <details>
-<summary><b>0.3</b> — interfaccia più sobria</summary>
+<summary><b>0.5.1</b> — dark theme in dialogs</summary>
 
-- Angoli quasi squadrati, bordi sottili, testi secondari più leggibili.
-- Opzioni con etichette esplicite (Tipo / Qualità / Formato).
-- Qualità **Auto** e **Chiedi ogni volta**, con le risoluzioni realmente disponibili e la dimensione stimata.
+- First app-drawn checkboxes and field borders, replacing the system ones that clashed with the dark theme.
 
 </details>
 
 <details>
-<summary><b>0.2</b> — formati, download segmentato, tema scuro</summary>
+<summary><b>0.5.0</b> — new interface, icon and download types</summary>
 
-- Interfaccia con anteprime dei video, tema chiaro/scuro.
-- **Finestra Formati**: video, più tracce audio insieme, sottotitoli anche da soli, incorporati o come file, conversione in SRT.
-- **MP4 / MKV** selezionabile.
-- **Download segmentato nativo**, senza aria2: più connessioni per file, ripresa, più download insieme.
-- Area di notifica, istanza singola, installer.
+- **Stacher-style interface**: profile on the left, link bar in the middle, *Download* and icons on the right; queue rows with icons to cancel, retry, open the folder and remove; status bar with the destination folder.
+- **New 3D "Ruby" icon** and **magenta → ruby palette**, with redesigned buttons and a calmer light theme.
+- **Download types**: Video + audio, Video only, Audio only, Subtitles only, Choose every time. The profile menu shows only the options for the chosen type.
+- **About window** with the status of yt-dlp, FFmpeg and Deno and buttons to update them.
+- **More reliable segmented downloads**: truly separate connections, resume with "Retry" after an error, correct speed when resuming, instant cancel, partial files removed when a download is removed.
+- Fixed accented characters in menus; the installer has the version in its name.
 
 </details>
 
-## Licenza
+<details>
+<summary><b>0.3</b> — calmer interface</summary>
 
-Stackly è software libero, distribuito con licenza [GNU GPL v3.0](LICENSE).
-yt-dlp, FFmpeg e Deno sono programmi separati, con le proprie licenze, scaricati a parte.
+- Nearly square corners, thin borders, more readable secondary text.
+- Options with explicit labels (Type / Quality / Format).
+- **Auto** and **Ask every time** quality, showing the resolutions actually available with the estimated size.
 
-## Note
+</details>
 
-Rispetta i termini d'uso dei siti da cui scarichi e il diritto d'autore. I contenuti protetti da DRM non sono scaricabili.
+<details>
+<summary><b>0.2</b> — formats, segmented downloads, dark theme</summary>
 
-## English
+- Interface with video thumbnails, light/dark theme.
+- **Formats window**: video, several audio tracks at once, subtitles even on their own, embedded or as files, SRT conversion.
+- **MP4 / MKV** selectable.
+- **Native segmented downloads**, without aria2: multiple connections per file, resume, several downloads at once.
+- Notification area, single instance, installer.
 
-**Stackly** is a lightweight native Windows (Win32 C++17) GUI for **yt-dlp**, inspired by Stacher's layout. A single `.exe`, no runtime required. The interface is available in **English and Italian** (it follows the Windows language, or pick it from menu ⋯ → Lingua / Language).
+</details>
 
-- **Downloads video, audio and subtitles** from YouTube and every other site supported by yt-dlp.
-- **Built-in segmented downloader**, no aria2 needed: multiple HTTP connections per file, resume support, parallel HLS/DASH fragments via yt-dlp, several downloads at once.
-- **Download profiles**: Video + audio, Video only, Audio only (MP3 / M4A / original), Subtitles only, or *Choose every time*.
-- **Format picker**: resolution, codec, multiple audio tracks at once, original or auto-generated subtitles. *Ask every time* shows only the resolutions actually available, with estimated size.
-- **MP4 or MKV**, merged without re-encoding. Light/dark theme, tray mode, keeps yt-dlp / FFmpeg / Deno up to date.
+## License
 
-**Install:** grab `StacklySetup-x.y.z.exe` (per-user install, no admin rights) or the portable zip from [Releases](https://github.com/Kyo89-sudo/Stackly/releases/latest). Requires Windows 10 or 11, 64-bit.
+Stackly is free software, released under the [GNU GPL v3.0](LICENSE).
+yt-dlp, FFmpeg and Deno are separate programs with their own licenses, downloaded separately.
 
-**Build:** `build.bat` (Visual Studio 2019/2022) or `./make_release.sh` (llvm-mingw, also from Linux). Translations live in `tools/lang_en.json`; `python3 tools/i18n.py` regenerates `src/lang_table.inc` and fails if a string is missing.
+## Notes
 
-**License:** [GNU GPL v3.0](LICENSE). Please respect the terms of service of the sites you download from; DRM-protected content is not supported.
+Please respect the terms of service of the sites you download from and copyright law. DRM-protected content cannot be downloaded.
