@@ -23,6 +23,8 @@
   <img src="docs/stackly-window.png" width="820" alt="Stackly main window, dark theme">
 </p>
 
+<p align="center"><sub>The screenshot shows the Italian UI. Stackly is fully available in English: it switches automatically on English Windows, or pick it from the ⋯ menu → Lingua / Language.</sub></p>
+
 ## Features
 
 - **Download video, audio and subtitles** from YouTube, Vimeo, SoundCloud, Twitch, RaiPlay, Mediaset and every other site supported by yt-dlp.
