@@ -139,9 +139,12 @@ tools/            generatore dell'icona
 tests/            test portabili
 ```
 
-## Novità della 0.5.3
+## Storico delle versioni
 
-Correzioni e robustezza; i dettagli per tutte le versioni sono nel [changelog](CHANGELOG.md).
+Clicca su una versione per vedere cosa è cambiato. I dettagli tecnici sono nel [changelog](CHANGELOG.md).
+
+<details>
+<summary><b>0.5.3</b> — correzioni e robustezza</summary>
 
 - Con più download insieme, uno già finito poteva restare bloccato su "Creazione file…" finché non finiva un altro.
 - Titoli e nomi con caratteri strani non vengono più mostrati con lettere sbagliate.
@@ -151,6 +154,57 @@ Correzioni e robustezza; i dettagli per tutte le versioni sono nel [changelog](C
 - Un download interrotto senza supporto alla ripresa non viene più dato per completato.
 - Niente chiusure improvvise se Windows esaurisce le risorse per i thread.
 - Menu ⋯ → "Stackly su GitHub" e "Segnala un problema..."; link al progetto nella finestra Informazioni.
+
+</details>
+
+<details>
+<summary><b>0.5.2</b> — dialoghi rifiniti</summary>
+
+- Un'unica casella di spunta quadrata per tutta l'app (Impostazioni, finestra Formati, liste).
+- Nelle Impostazioni campi e pulsanti rettangolari, con cornice sottile che diventa rubino quando sono attivi.
+- Frecce dei campi numerici nello stile dell'app; testo e cursore centrati nei campi.
+- Se all'avvio è già aperta una copia di Stackly da un'altra cartella (per esempio una versione vecchia rimasta nell'area di notifica), Stackly chiede se chiuderla e avviarsi al suo posto.
+
+</details>
+
+<details>
+<summary><b>0.5.1</b> — tema scuro nei dialoghi</summary>
+
+- Prime caselle di spunta e cornici dei campi disegnate nello stile dell'app, al posto di quelle di sistema che stonavano nel tema scuro.
+
+</details>
+
+<details>
+<summary><b>0.5.0</b> — nuova interfaccia, icona e tipi di download</summary>
+
+- **Interfaccia sul modello di Stacher**: profilo a sinistra, barra del link al centro, *Scarica* e icone a destra; coda a righe con icone per annullare, riprovare, aprire la cartella e rimuovere; barra di stato con la cartella di destinazione.
+- **Nuova icona 3D "Rubino"** e **palette magenta → rubino**, con pulsanti ridisegnati e un tema chiaro più sobrio.
+- **Tipi di download**: Video + audio, Solo video, Solo audio, Solo sottotitoli, Scegli ogni volta. Il menu del profilo mostra solo le opzioni del tipo scelto.
+- **Finestra Informazioni** con lo stato di yt-dlp, FFmpeg e Deno, e i pulsanti per aggiornarli.
+- **Download segmentato più affidabile**: connessioni davvero separate, ripresa con "Riprova" dopo un errore, velocità corretta alla ripresa, annullamento immediato, file parziali eliminati quando si rimuove un download.
+- Accenti corretti nei menu; l'installer ha la versione nel nome.
+
+</details>
+
+<details>
+<summary><b>0.3</b> — interfaccia più sobria</summary>
+
+- Angoli quasi squadrati, bordi sottili, testi secondari più leggibili.
+- Opzioni con etichette esplicite (Tipo / Qualità / Formato).
+- Qualità **Auto** e **Chiedi ogni volta**, con le risoluzioni realmente disponibili e la dimensione stimata.
+
+</details>
+
+<details>
+<summary><b>0.2</b> — formati, download segmentato, tema scuro</summary>
+
+- Interfaccia con anteprime dei video, tema chiaro/scuro.
+- **Finestra Formati**: video, più tracce audio insieme, sottotitoli anche da soli, incorporati o come file, conversione in SRT.
+- **MP4 / MKV** selezionabile.
+- **Download segmentato nativo**, senza aria2: più connessioni per file, ripresa, più download insieme.
+- Area di notifica, istanza singola, installer.
+
+</details>
 
 ## Note
 
